@@ -1,0 +1,2108 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will Racette | Southeast Asia Adventure</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter, Outfit & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+
+    <!-- Leaflet.js CSS & JS for Interactive 14-Stop Route Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                        script: ['Caveat', 'cursive'],
+                    },
+                    colors: {
+                        ocean: {
+                            950: '#040812',
+                            900: '#081021',
+                            800: '#0e1b36',
+                            700: '#162a52',
+                        },
+                        biocyan: {
+                            400: '#22d3ee',
+                            500: '#06b6d4',
+                            600: '#0891b2',
+                        },
+                        coral: {
+                            400: '#fb923c',
+                            500: '#f97316',
+                            600: '#ea580c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #040812;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(8, 16, 33, 0.78);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(56, 189, 248, 0.14);
+            transition: background 0.35s ease, border-color 0.35s ease, transform 0.25s ease;
+        }
+
+        .glass-panel-hover:hover {
+            border-color: rgba(34, 211, 238, 0.45);
+            transform: translateY(-2px);
+        }
+
+        /* Art Spotlight Mode makes cards ultra-translucent so the tattoo mural shines through */
+        body.art-spotlight-mode .glass-panel {
+            background: rgba(4, 8, 18, 0.38);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border-color: rgba(251, 146, 60, 0.28);
+        }
+
+        /* Custom Leaflet Marker Pin */
+        .custom-marker-pin {
+            width: 30px;
+            height: 30px;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 800;
+            font-size: 12px;
+            color: #040812;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 14px rgba(6, 182, 212, 0.75);
+            transition: transform 0.2s ease;
+        }
+
+        .custom-marker-pin:hover {
+            transform: scale(1.18);
+        }
+
+        /* Leaflet Dark Popup Styling */
+        .leaflet-popup-content-wrapper,
+        .leaflet-popup-tip {
+            background: #081021 !important;
+            color: #f8fafc !important;
+            border: 1px solid rgba(34, 211, 238, 0.35);
+            border-radius: 16px !important;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.75) !important;
+        }
+
+        /* Animated Dotted Route Trail in Background Mural */
+        @keyframes dashFlow {
+            to {
+                stroke-dashoffset: -120;
+            }
+        }
+        .mural-dotted-path {
+            animation: dashFlow 9s linear infinite;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #040812;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #06b6d4;
+        }
+
+        /* Nautical Topographic Grid Overlay */
+        .bg-nautical-grid {
+            background-size: 48px 48px;
+            background-image: 
+                linear-gradient(to right, rgba(56, 189, 248, 0.045) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(56, 189, 248, 0.045) 1px, transparent 1px);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-biocyan-500 selection:text-ocean-950 relative min-h-screen">
+
+    <!-- ============================================================================ -->
+    <!-- FULL-VIEWPORT ILLUSTRATED BACKGROUND MURAL: "SAME SKY — DIFFERENT HORIZONS" -->
+    <!-- ============================================================================ -->
+    <div id="tattoo-background-container" class="fixed inset-0 pointer-events-none z-0 overflow-hidden flex justify-center items-center">
+        <!-- Deep Ocean Base + Nautical Coordinate Grid + Warm Sunset Horizon Glows -->
+        <div class="absolute inset-0 bg-gradient-to-b from-[#071226] via-[#050d1d] to-[#030710]"></div>
+        <div class="absolute inset-0 bg-nautical-grid"></div>
+        <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[1100px] h-[550px] rounded-full bg-amber-500/12 blur-[150px]"></div>
+        <div class="absolute top-1/3 left-1/2 -translate-x-1/2 w-[980px] h-[650px] rounded-full bg-biocyan-500/12 blur-[160px]"></div>
+        <div class="absolute -bottom-20 left-1/2 -translate-x-1/2 w-[1050px] h-[550px] rounded-full bg-emerald-500/10 blur-[150px]"></div>
+
+        <!-- Optional Custom Uploaded Image Layer -->
+        <img id="user-tattoo-bg-img" alt="Same Sky Different Horizons Route Art" class="hidden fixed inset-0 w-full h-full object-contain object-center transition-opacity duration-500 mix-blend-screen" style="opacity: 0.45;" />
+
+        <!-- Detailed Illustrated Vertical Route Mural SVG ("Same Sky — Different Horizons") -->
+        <div id="svg-mural-wrapper" class="relative w-full max-w-4xl h-full flex items-center justify-center transition-opacity duration-500" style="opacity: 0.48;">
+            <svg viewBox="0 0 800 1350" class="w-full h-full object-contain" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="sunsetWarm" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#fdba74" stop-opacity="0.32"/>
+                        <stop offset="28%" stop-color="#38bdf8" stop-opacity="0.20"/>
+                        <stop offset="62%" stop-color="#2dd4bf" stop-opacity="0.22"/>
+                        <stop offset="100%" stop-color="#fb7185" stop-opacity="0.25"/>
+                    </linearGradient>
+                    <linearGradient id="trailStroke" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#fb923c"/>
+                        <stop offset="35%" stop-color="#22d3ee"/>
+                        <stop offset="70%" stop-color="#a855f7"/>
+                        <stop offset="100%" stop-color="#f43f5e"/>
+                    </linearGradient>
+                </defs>
+
+                <!-- Soft Vertical Parchment / Horizon Halo -->
+                <rect x="135" y="24" width="530" height="1270" rx="235" fill="url(#sunsetWarm)" stroke="#38bdf8" stroke-opacity="0.12" stroke-width="1.5"/>
+
+                <!-- 1. TOP VIGNETTE: KOH TAO PARAGLIDER, CLOUDS & THAI LONGTAIL BOATS -->
+                <g stroke="#fde68a" stroke-opacity="0.78" stroke-width="2" stroke-linecap="round">
+                    <!-- Sunset clouds -->
+                    <path d="M220 95 Q250 78 280 92 Q310 75 340 95 Z" fill="#fdba74" fill-opacity="0.18" stroke-opacity="0.4"/>
+                    <path d="M560 110 Q590 92 620 108 Q645 95 665 112 Z" fill="#fdba74" fill-opacity="0.18" stroke-opacity="0.4"/>
+                    <!-- Paraglider canopy with ribs -->
+                    <path d="M420 68 C455 24, 545 24, 580 68 C542 52, 458 52, 420 68 Z" fill="#fb923c" fill-opacity="0.32"/>
+                    <path d="M455 46 L460 60 M485 38 L487 56 M515 38 L513 56 M545 46 L540 60" stroke-width="1.3"/>
+                    <line x1="435" y1="65" x2="496" y2="124" stroke-width="1.2"/>
+                    <line x1="470" y1="57" x2="498" y2="124" stroke-width="1"/>
+                    <line x1="530" y1="57" x2="504" y2="124" stroke-width="1"/>
+                    <line x1="565" y1="65" x2="506" y2="124" stroke-width="1.2"/>
+                    <circle cx="501" cy="128" r="5.5" fill="#fde68a"/>
+                    <!-- Horizon Sea & Thai Longtail Boats -->
+                    <line x1="210" y1="190" x2="635" y2="190" stroke="#38bdf8" stroke-opacity="0.45" stroke-width="1.5"/>
+                    <path d="M440 202 L542 202 L525 218 L458 218 L432 184" fill="#22d3ee" fill-opacity="0.28" stroke="#38bdf8"/>
+                    <path d="M552 222 L632 222 L618 234 L568 234 L545 206" fill="#22d3ee" fill-opacity="0.28" stroke="#38bdf8"/>
+                </g>
+
+                <!-- 2. KHAO SOK LIMESTONE KARSTS, PALMS & JUNGLE RIVER -->
+                <g stroke="#6ee7b7" stroke-opacity="0.65" stroke-width="2" stroke-linejoin="round">
+                    <!-- Towering Left Cliff Wall -->
+                    <path d="M150 140 L215 165 L235 280 L195 360 L150 360 Z" fill="#065f46" fill-opacity="0.32"/>
+                    <!-- Right Karst Towers -->
+                    <path d="M465 335 L505 225 L540 275 L580 198 L615 260 L645 220 L660 335 Z" fill="#065f46" fill-opacity="0.35"/>
+                    <!-- Winding Jungle River -->
+                    <path d="M395 270 C365 305, 435 340, 380 385" stroke="#34d399" stroke-width="12" stroke-opacity="0.25" fill="none"/>
+                </g>
+
+                <!-- 3. NINH BINH CURVED-ROOF PAGODA & KARST PEAKS -->
+                <g stroke="#a7f3d0" stroke-opacity="0.75" stroke-width="2">
+                    <path d="M518 415 Q560 402 602 415 L586 396 L534 396 Z" fill="#10b981" fill-opacity="0.3"/>
+                    <path d="M506 440 Q560 426 614 440 L596 418 L524 418 Z" fill="#10b981" fill-opacity="0.3"/>
+                    <path d="M496 465 Q560 452 624 465 L606 443 L514 443 Z" fill="#10b981" fill-opacity="0.3"/>
+                    <rect x="532" y="465" width="56" height="28" fill="#064e3b" fill-opacity="0.45"/>
+                </g>
+
+                <!-- 4. DA NANG SUNSET KITEBOARDER & WAVE -->
+                <g stroke="#fdba74" stroke-opacity="0.8" stroke-width="2.2">
+                    <circle cx="570" cy="542" r="32" fill="#fb923c" fill-opacity="0.28"/>
+                    <!-- Power Kite Canopy -->
+                    <path d="M600 495 C642 518, 652 568, 618 602 C628 565, 620 525, 600 495 Z" fill="#38bdf8" fill-opacity="0.35" stroke="#38bdf8" stroke-width="2.5"/>
+                    <line x1="605" y1="510" x2="565" y2="578" stroke-width="1.2"/>
+                    <line x1="618" y1="585" x2="565" y2="578" stroke-width="1.2"/>
+                    <circle cx="562" cy="574" r="5" fill="#fdba74"/>
+                    <path d="M535 604 Q572 590 612 606" stroke="#38bdf8" stroke-width="3"/>
+                </g>
+
+                <!-- 5. PALAWAN KARST LAGOONS & BANCA OUTRIGGER BOATS -->
+                <g stroke="#38bdf8" stroke-opacity="0.72" stroke-width="2">
+                    <path d="M155 685 L198 525 L235 615 L268 540 L315 685 Z" fill="#0c4a6e" fill-opacity="0.42"/>
+                    <path d="M305 685 L338 575 L372 685 Z" fill="#0c4a6e" fill-opacity="0.35"/>
+                    <!-- Outrigger Banca Boats -->
+                    <path d="M210 708 L315 708 L298 722 L228 722 Z" fill="#38bdf8" fill-opacity="0.35"/>
+                    <line x1="195" y1="718" x2="330" y2="718" stroke-width="1.5"/>
+                    <path d="M345 715 L415 715 L402 725 L358 725 Z" fill="#38bdf8" fill-opacity="0.3"/>
+                </g>
+
+                <!-- 6. SIARGAO BARREL WAVE SURFER + SEA TURTLE, SCUBA DIVER & MANTA RAY -->
+                <g stroke="#22d3ee" stroke-opacity="0.8" stroke-width="2.2">
+                    <!-- Curling Siargao Barrel Wave & Surfer -->
+                    <path d="M505 785 C555 700, 655 720, 645 812 C635 858, 558 862, 520 838" fill="#0891b2" fill-opacity="0.28"/>
+                    <path d="M540 795 C565 745, 618 755, 612 805" stroke-opacity="0.5"/>
+                    <!-- Surfer & Board -->
+                    <ellipse cx="572" cy="818" rx="22" ry="5" transform="rotate(-15 572 818)" fill="#f8fafc" fill-opacity="0.5"/>
+                    <circle cx="572" cy="792" r="4.5" fill="#f8fafc"/>
+                    <path d="M562 806 L572 797 L582 812" stroke="#f8fafc" stroke-width="2"/>
+
+                    <!-- Sea Turtle (Top Left Underwater) -->
+                    <ellipse cx="222" cy="775" rx="18" ry="12" transform="rotate(-20 222 775)" fill="#10b981" fill-opacity="0.35"/>
+                    <circle cx="242" cy="768" r="4.5" fill="#10b981"/>
+                    <path d="M225 763 L212 748 M228 785 L218 800" stroke="#6ee7b7" stroke-width="2"/>
+
+                    <!-- Scuba Diver with Tank & Fins -->
+                    <circle cx="342" cy="792" r="7" fill="#22d3ee"/>
+                    <path d="M285 802 L334 795 L305 814 L255 822" fill="#22d3ee" fill-opacity="0.32"/>
+                    <rect x="298" y="784" width="24" height="8" rx="4" transform="rotate(-10 298 784)" fill="#fdba74" fill-opacity="0.6"/>
+
+                    <!-- Reef Manta Ray -->
+                    <path d="M235 862 Q285 828 345 865 Q292 906 235 862 Z" fill="#a855f7" fill-opacity="0.32" stroke="#c084fc"/>
+                    <path d="M235 862 L198 848" stroke="#c084fc" stroke-width="1.8"/>
+                </g>
+
+                <!-- 7. BALI MULTI-TIER MERU PAGODA TEMPLE & PALMS -->
+                <g stroke="#fda4af" stroke-opacity="0.75" stroke-width="2">
+                    <path d="M518 885 L562 885 L552 872 L528 872 Z" fill="#f43f5e" fill-opacity="0.3"/>
+                    <path d="M508 908 L572 908 L560 892 L520 892 Z" fill="#f43f5e" fill-opacity="0.3"/>
+                    <path d="M498 932 L582 932 L568 914 L512 914 Z" fill="#f43f5e" fill-opacity="0.3"/>
+                    <path d="M488 958 L592 958 L576 938 L504 938 Z" fill="#f43f5e" fill-opacity="0.3"/>
+                    <rect x="515" y="958" width="50" height="22" fill="#881337" fill-opacity="0.45"/>
+                </g>
+
+                <!-- 8. LOMBOK CLIFF MOTORCYCLIST & KOMODO DRAGON -->
+                <g stroke="#fb7185" stroke-opacity="0.78" stroke-width="2.2">
+                    <!-- Coastal Cliff Road -->
+                    <path d="M210 1065 Q295 1035 375 1095 L350 1155 L210 1155 Z" fill="#1e293b" fill-opacity="0.45"/>
+                    <!-- Motorbike Rider on Cliff -->
+                    <circle cx="278" cy="1032" r="11" fill="#040812"/>
+                    <circle cx="314" cy="1032" r="11" fill="#040812"/>
+                    <path d="M278 1032 L296 1010 L314 1032 M292 1010 L292 990" stroke="#fde68a" stroke-width="2.2"/>
+                    <circle cx="294" cy="984" r="5.5" fill="#fde68a"/>
+                    <!-- Komodo Dragon Bottom Right -->
+                    <path d="M475 1165 Q525 1142 585 1162 L638 1176 L582 1184 L490 1184 Z" fill="#f43f5e" fill-opacity="0.35"/>
+                    <path d="M502 1182 L495 1198 M558 1182 L565 1198" stroke-width="3" stroke-linecap="round"/>
+                </g>
+
+                <!-- WINDING DOTTED ROUTE TRAIL (TOP TO BOTTOM) -->
+                <path
+                    d="M 355 130 C 270 155, 290 225, 360 250 C 445 275, 440 355, 340 390 C 245 425, 275 495, 415 530 C 490 555, 445 630, 365 660 C 295 690, 410 740, 485 780 C 525 810, 425 865, 355 900 C 295 935, 350 995, 405 1030 C 460 1065, 435 1135, 395 1165"
+                    stroke="url(#trailStroke)"
+                    stroke-width="4.5"
+                    stroke-dasharray="9 9"
+                    stroke-linecap="round"
+                    class="mural-dotted-path"
+                />
+
+                <!-- ROUTE WAYPOINT DOTS & LABELS -->
+                <g font-family="Outfit, sans-serif" font-weight="800" font-size="17" fill="#f8fafc" letter-spacing="1.5">
+                    <circle cx="355" cy="130" r="6.5" fill="#fb923c" stroke="#040812" stroke-width="2"/>
+                    <text x="372" y="126">KOH TAO, THAILAND</text>
+
+                    <circle cx="305" cy="245" r="6.5" fill="#fb923c" stroke="#040812" stroke-width="2"/>
+                    <text x="322" y="250">KHAO SOK, THAILAND</text>
+
+                    <circle cx="290" cy="405" r="6.5" fill="#22d3ee" stroke="#040812" stroke-width="2"/>
+                    <text x="308" y="410">NINH BINH, VIETNAM</text>
+
+                    <circle cx="420" cy="532" r="6.5" fill="#22d3ee" stroke="#040812" stroke-width="2"/>
+                    <text x="310" y="525">DA NANG, VIETNAM</text>
+
+                    <circle cx="368" cy="660" r="6.5" fill="#a855f7" stroke="#040812" stroke-width="2"/>
+                    <text x="385" y="655">PALAWAN, PHILIPPINES</text>
+
+                    <circle cx="485" cy="780" r="6.5" fill="#a855f7" stroke="#040812" stroke-width="2"/>
+                    <text x="370" y="785">SIARGAO, PHILIPPINES</text>
+
+                    <circle cx="355" cy="900" r="6.5" fill="#f43f5e" stroke="#040812" stroke-width="2"/>
+                    <text x="372" y="905">BALI, INDONESIA</text>
+
+                    <circle cx="405" cy="1030" r="6.5" fill="#f43f5e" stroke="#040812" stroke-width="2"/>
+                    <text x="422" y="1035">LOMBOK / NUSA, ID</text>
+
+                    <circle cx="395" cy="1165" r="6.5" fill="#f43f5e" stroke="#040812" stroke-width="2"/>
+                    <text x="355" y="1195">KOMODO, INDONESIA</text>
+                </g>
+
+                <!-- BOTTOM SCRIPT MOTTO: "Same Sky — Different Horizons" -->
+                <path d="M345 1230 Q370 1215 395 1230 T445 1230 T495 1230" stroke="#38bdf8" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <text x="400" y="1272" text-anchor="middle" font-family="Caveat, cursive" font-size="38" font-weight="700" fill="#f8fafc">Same Sky — Different Horizons</text>
+            </svg>
+        </div>
+    </div>
+
+    <!-- ============================================================================ -->
+    <!-- FLOATING BACKGROUND ARTWORK CONTROLLER (BOTTOM-LEFT)                         -->
+    <!-- ============================================================================ -->
+    <div class="fixed bottom-4 left-4 z-40 glass-panel rounded-2xl p-2 border border-slate-800/90 shadow-2xl flex items-center space-x-1.5 text-[11px]">
+        <span class="hidden sm:inline-flex items-center space-x-1 px-2 text-slate-400 font-mono uppercase tracking-wider">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-coral-400"></i>
+            <span>Route Art:</span>
+        </span>
+        <button id="bg-btn-subtle" onclick="setBackgroundArtIntensity('subtle')" class="px-2.5 py-1 rounded-lg bg-ocean-950/90 text-slate-300 hover:text-white font-semibold transition-all">Subtle</button>
+        <button id="bg-btn-balanced" onclick="setBackgroundArtIntensity('balanced')" class="px-2.5 py-1 rounded-lg bg-biocyan-500 text-ocean-950 font-extrabold transition-all">Balanced</button>
+        <button id="bg-btn-spotlight" onclick="setBackgroundArtIntensity('spotlight')" class="px-2.5 py-1 rounded-lg bg-ocean-950/90 text-slate-300 hover:text-white font-semibold transition-all">Art Spotlight</button>
+        <label class="cursor-pointer px-2.5 py-1 rounded-lg bg-ocean-950/90 hover:bg-slate-800 text-amber-300 border border-amber-500/30 font-semibold inline-flex items-center space-x-1 transition-all" title="Pin your original tattoo route photo as background">
+            <i data-lucide="image-plus" class="w-3.5 h-3.5"></i>
+            <span class="hidden md:inline">Pin Photo</span>
+            <input type="file" accept="image/*" class="hidden" onchange="handleCustomTattooImageUpload(event)" />
+        </label>
+    </div>
+
+    <!-- ============================================================================ -->
+    <!-- TOP STICKY NAVIGATION BAR (RESTORED LAYOUT + BLENDED SOCIAL/MERCH/DONATE)    -->
+    <!-- ============================================================================ -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-slate-800/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-3">
+            <!-- Brand Identity -->
+            <a href="#overview" class="flex items-center space-x-3 group shrink-0">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-biocyan-400 via-sky-500 to-coral-500 p-0.5 shadow-lg shadow-biocyan-500/20">
+                    <div class="w-full h-full bg-ocean-950 rounded-[14px] flex items-center justify-center">
+                        <i data-lucide="compass" class="w-5 h-5 text-biocyan-400 group-hover:rotate-45 transition-transform duration-300"></i>
+                    </div>
+                </div>
+                <div>
+                    <span class="font-display font-extrabold text-base sm:text-lg tracking-tight text-white block leading-none">WILL RACETTE</span>
+                    <span class="font-mono text-[10px] tracking-widest uppercase text-biocyan-400 block mt-1">SOUTHEAST ASIA ADVENTURE • STARTS 11/11 @ NOON BKK</span>
+                </div>
+            </a>
+
+            <!-- Center Navigation Links -->
+            <nav class="hidden lg:flex items-center bg-ocean-950/80 border border-slate-800/90 rounded-2xl p-1 space-x-1 text-xs font-bold text-slate-300">
+                <a href="#overview" class="px-3 py-1.5 rounded-xl hover:bg-slate-800/80 hover:text-white transition-all">Overview</a>
+                <a href="#map-section" class="px-3 py-1.5 rounded-xl hover:bg-slate-800/80 hover:text-white transition-all">Route Map</a>
+                <a href="#itinerary" class="px-3 py-1.5 rounded-xl hover:bg-slate-800/80 hover:text-white transition-all">Master Itinerary</a>
+                <a href="#schedule" class="px-3 py-1.5 rounded-xl hover:bg-slate-800/80 hover:text-white transition-all">Schedule & Stays</a>
+                <a href="#gear" class="px-3 py-1.5 rounded-xl hover:bg-slate-800/80 hover:text-white transition-all">Gear List</a>
+            </nav>
+
+            <!-- Right Cluster: Blended Merch/Donate, Socials, Share + Polarsteps & Wanderlog Pills -->
+            <div class="flex items-center space-x-1.5 sm:space-x-2">
+                <!-- Blended Merch & Donate Quick Pills -->
+                <button onclick="openMerchModal()" class="hidden sm:inline-flex items-center space-x-1.5 text-xs font-bold px-2.5 py-2 rounded-xl bg-ocean-950/90 hover:bg-slate-800 text-biocyan-300 border border-slate-800 hover:border-biocyan-500/40 transition-all" title="Trail Merchandise">
+                    <i data-lucide="shirt" class="w-3.5 h-3.5 text-biocyan-400"></i>
+                    <span class="hidden xl:inline">Merch</span>
+                </button>
+                <button onclick="openDonateModal()" class="hidden sm:inline-flex items-center space-x-1.5 text-xs font-bold px-2.5 py-2 rounded-xl bg-ocean-950/90 hover:bg-slate-800 text-amber-300 border border-slate-800 hover:border-amber-500/40 transition-all" title="Fuel the Trip / Donate">
+                    <i data-lucide="heart-handshake" class="w-3.5 h-3.5 text-coral-400"></i>
+                    <span class="hidden xl:inline">Donate</span>
+                </button>
+
+                <!-- Social Media Icons (Instagram, YouTube, Facebook) -->
+                <div class="hidden md:flex items-center bg-ocean-950/90 border border-slate-800 rounded-xl p-1 space-x-0.5">
+                    <a href="https://www.facebook.com/will.racette.5/" target="_blank" rel="noopener noreferrer" title="Facebook" class="p-1.5 rounded-lg text-slate-300 hover:text-blue-400 hover:bg-blue-500/10 transition-all">
+                        <i data-lucide="facebook" class="w-3.5 h-3.5"></i>
+                    </a>
+                    <a href="https://www.instagram.com/willracette/" target="_blank" rel="noopener noreferrer" title="Instagram" class="p-1.5 rounded-lg text-slate-300 hover:text-pink-400 hover:bg-pink-500/10 transition-all">
+                        <i data-lucide="instagram" class="w-3.5 h-3.5"></i>
+                    </a>
+                    <a href="https://www.youtube.com/@willracette4959" target="_blank" rel="noopener noreferrer" title="YouTube" class="p-1.5 rounded-lg text-slate-300 hover:text-red-400 hover:bg-red-500/10 transition-all">
+                        <i data-lucide="youtube" class="w-3.5 h-3.5"></i>
+                    </a>
+                </div>
+
+                <!-- Share Link Button -->
+                <button onclick="shareWebsite()" class="inline-flex items-center space-x-1 text-xs font-bold px-2.5 py-2 rounded-xl bg-ocean-950/90 hover:bg-slate-800 text-slate-200 hover:text-biocyan-400 border border-slate-800 transition-all" title="Share Website Link">
+                    <i data-lucide="share-2" class="w-3.5 h-3.5 text-biocyan-400"></i>
+                    <span class="hidden xl:inline">Share</span>
+                </button>
+
+                <!-- Signature Polarsteps & Wanderlog Quick Buttons -->
+                <a href="https://www.polarsteps.com/WillRacette/28440827-a-new-adventure?referral=true" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex items-center space-x-1.5 text-xs font-extrabold px-3 py-2 rounded-xl bg-gradient-to-r from-coral-500 to-amber-500 hover:from-coral-400 hover:to-amber-400 text-ocean-950 shadow-md shadow-coral-500/15 transition-all">
+                    <i data-lucide="footprints" class="w-3.5 h-3.5"></i>
+                    <span>Polarsteps</span>
+                </a>
+                <a href="https://wanderlog.com/plan/qxjfuxvhmbbqrxjz/se-asia-backpacking/shared" target="_blank" rel="noopener noreferrer" class="hidden md:inline-flex items-center space-x-1.5 text-xs font-extrabold px-3 py-2 rounded-xl bg-biocyan-500/15 hover:bg-biocyan-500/25 text-biocyan-300 border border-biocyan-500/35 transition-all">
+                    <i data-lucide="map" class="w-3.5 h-3.5"></i>
+                    <span>Wanderlog</span>
+                </a>
+
+                <!-- Mobile Menu Toggle Button -->
+                <button onclick="toggleMobileMenu()" class="lg:hidden p-2 rounded-xl bg-ocean-950 border border-slate-800 text-slate-300 hover:text-white">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Collapsible Navigation Drawer -->
+        <div id="mobile-nav-drawer" class="hidden lg:hidden border-t border-slate-800/80 bg-ocean-950/95 px-4 py-4 space-y-3">
+            <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+                <a href="#overview" onclick="toggleMobileMenu()" class="p-2.5 rounded-xl bg-ocean-900 text-slate-200">Overview</a>
+                <a href="#map-section" onclick="toggleMobileMenu()" class="p-2.5 rounded-xl bg-ocean-900 text-slate-200">Satellite Map</a>
+                <a href="#itinerary" onclick="toggleMobileMenu()" class="p-2.5 rounded-xl bg-ocean-900 text-slate-200">14-Stop Itinerary</a>
+                <a href="#schedule" onclick="toggleMobileMenu()" class="p-2.5 rounded-xl bg-ocean-900 text-slate-200">Schedule & Stays</a>
+                <a href="#gear" onclick="toggleMobileMenu()" class="p-2.5 rounded-xl bg-ocean-900 text-biocyan-400">Actual Gear List</a>
+                <a href="#support" onclick="toggleMobileMenu()" class="p-2.5 rounded-xl bg-ocean-900 text-amber-300">Merch & Support</a>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800">
+                <a href="https://www.facebook.com/will.racette.5/" target="_blank" rel="noopener noreferrer" class="px-3 py-2 rounded-xl bg-ocean-900 text-blue-400 text-xs font-bold flex items-center space-x-1.5">
+                    <i data-lucide="facebook" class="w-3.5 h-3.5"></i><span>Facebook</span>
+                </a>
+                <a href="https://www.instagram.com/willracette/" target="_blank" rel="noopener noreferrer" class="px-3 py-2 rounded-xl bg-ocean-900 text-pink-400 text-xs font-bold flex items-center space-x-1.5">
+                    <i data-lucide="instagram" class="w-3.5 h-3.5"></i><span>Instagram</span>
+                </a>
+                <a href="https://www.youtube.com/@willracette4959" target="_blank" rel="noopener noreferrer" class="px-3 py-2 rounded-xl bg-ocean-900 text-red-400 text-xs font-bold flex items-center space-x-1.5">
+                    <i data-lucide="youtube" class="w-3.5 h-3.5"></i><span>YouTube</span>
+                </a>
+                <button onclick="openMerchModal()" class="px-3 py-2 rounded-xl bg-biocyan-500/15 text-biocyan-300 text-xs font-bold">Merch</button>
+                <button onclick="openDonateModal()" class="px-3 py-2 rounded-xl bg-amber-500/15 text-amber-300 text-xs font-bold">Donate</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ============================================================================ -->
+    <!-- MAIN CONTENT CONTAINER                                                       -->
+    <!-- ============================================================================ -->
+    <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-16">
+
+        <!-- ======================================================================== -->
+        <!-- 1. HERO OVERVIEW & LIVE LAUNCH TELEMETRY (#overview)                     -->
+        <!-- ======================================================================== -->
+        <section id="overview" class="space-y-6">
+            <div class="glass-panel rounded-3xl p-6 sm:p-10 border border-slate-800/90 shadow-2xl relative overflow-hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    <!-- Left Column: Title, Motto, Bio & Quick Links -->
+                    <div class="lg:col-span-7 space-y-5">
+                        <div class="inline-flex flex-wrap items-center gap-2 px-3.5 py-1.5 rounded-full bg-biocyan-500/10 border border-biocyan-500/30">
+                            <span class="w-2 h-2 rounded-full bg-biocyan-400 animate-ping"></span>
+                            <span id="dynamic-trip-status-badge" class="font-mono text-xs font-bold tracking-wider uppercase text-biocyan-300">
+                                STARTS 11/11 AT 12:00 PM NOON BANGKOK TIME
+                            </span>
+                        </div>
+
+                        <div class="space-y-2">
+                            <p class="font-script text-2xl sm:text-3xl text-coral-400">“Same Sky — Different Horizons”</p>
+                            <h1 class="font-display font-black text-3xl sm:text-5xl lg:text-6xl tracking-tight leading-[1.06] text-transparent bg-clip-text bg-gradient-to-r from-biocyan-400 via-sky-300 to-coral-400">
+                                SOUTHEAST ASIA ADVENTURE
+                            </h1>
+                        </div>
+
+                        <div class="text-sm sm:text-base text-slate-300 leading-relaxed max-w-2xl space-y-3">
+                            <p class="text-white font-semibold text-base sm:text-lg">Hi, I'm Will!</p>
+                            <p>
+                                I recently traded my job, daily routines, and deadlines for a backpack and an open-ended adventure through Southeast Asia. Call it a midlife crisis, a reset, or just finally deciding to live a little differently.
+                            </p>
+                            <p>
+                                The plan? Explore, eat, dive, fly, meet interesting people, immerse myself in new cultures, chase a few adventures, and see where the journey takes me. Let's see what happens!
+                            </p>
+                        </div>
+
+                        <!-- Primary Action Buttons: Polarsteps, Wanderlog, Share, Merch, Donate -->
+                        <div class="flex flex-wrap items-center gap-2.5 pt-1">
+                            <a href="https://www.polarsteps.com/WillRacette/28440827-a-new-adventure?referral=true" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-coral-500 to-amber-500 hover:from-coral-400 hover:to-amber-400 text-ocean-950 font-extrabold text-xs sm:text-sm shadow-lg shadow-coral-500/20 transition-all">
+                                <i data-lucide="footprints" class="w-4 h-4"></i>
+                                <span>Follow Live on Polarsteps</span>
+                                <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                            </a>
+                            <a href="https://wanderlog.com/plan/qxjfuxvhmbbqrxjz/se-asia-backpacking/shared" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-2 px-4 py-2.5 rounded-2xl bg-biocyan-500/15 hover:bg-biocyan-500/25 text-biocyan-300 border border-biocyan-500/40 font-extrabold text-xs sm:text-sm transition-all">
+                                <i data-lucide="map" class="w-4 h-4"></i>
+                                <span>Wanderlog Route Plan</span>
+                                <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                            </a>
+                            <button onclick="openMerchModal()" class="inline-flex items-center space-x-1.5 px-3.5 py-2.5 rounded-2xl bg-ocean-950/90 hover:bg-slate-800 text-biocyan-300 border border-slate-800 hover:border-biocyan-500/40 font-bold text-xs transition-all">
+                                <i data-lucide="shirt" class="w-4 h-4 text-biocyan-400"></i>
+                                <span>Trail Merch</span>
+                            </button>
+                            <button onclick="openDonateModal()" class="inline-flex items-center space-x-1.5 px-3.5 py-2.5 rounded-2xl bg-ocean-950/90 hover:bg-slate-800 text-amber-300 border border-slate-800 hover:border-amber-500/40 font-bold text-xs transition-all">
+                                <i data-lucide="heart-handshake" class="w-4 h-4 text-coral-400"></i>
+                                <span>Fuel the Trip</span>
+                            </button>
+                            <button onclick="shareWebsite()" class="inline-flex items-center space-x-1.5 px-3.5 py-2.5 rounded-2xl bg-ocean-950/90 hover:bg-slate-800 text-slate-200 border border-slate-800 font-bold text-xs transition-all">
+                                <i data-lucide="share-2" class="w-4 h-4 text-biocyan-400"></i>
+                                <span>Share</span>
+                            </button>
+                        </div>
+
+                        <!-- Social Channels Strip -->
+                        <div class="flex flex-wrap items-center gap-2 pt-1">
+                            <span class="font-mono text-[11px] uppercase tracking-wider text-slate-400">Socials:</span>
+                            <a href="https://www.instagram.com/willracette/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-ocean-950/90 hover:bg-pink-500/15 border border-slate-800 hover:border-pink-500/40 text-xs font-bold text-pink-400 transition-all">
+                                <i data-lucide="instagram" class="w-3.5 h-3.5"></i>
+                                <span>@willracette</span>
+                            </a>
+                            <a href="https://www.youtube.com/@willracette4959" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-ocean-950/90 hover:bg-red-500/15 border border-slate-800 hover:border-red-500/40 text-xs font-bold text-red-400 transition-all">
+                                <i data-lucide="youtube" class="w-3.5 h-3.5"></i>
+                                <span>YouTube</span>
+                            </a>
+                            <a href="https://www.facebook.com/will.racette.5/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-ocean-950/90 hover:bg-blue-500/15 border border-slate-800 hover:border-blue-500/40 text-xs font-bold text-blue-400 transition-all">
+                                <i data-lucide="facebook" class="w-3.5 h-3.5"></i>
+                                <span>Facebook</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Live Countdown Clock & Telemetry Card -->
+                    <div class="lg:col-span-5">
+                        <div class="bg-ocean-950/90 rounded-3xl p-5 sm:p-6 border border-slate-800/90 space-y-4 shadow-xl">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span id="countdown-heading" class="font-mono text-[11px] uppercase tracking-widest text-biocyan-400 font-bold block">BANGKOK KICKOFF COUNTDOWN</span>
+                                    <p id="countdown-subtext" class="text-xs text-slate-400 mt-0.5">Starts 11/11 at 12:00 PM Noon Bangkok Time</p>
+                                </div>
+                                <i data-lucide="plane-takeoff" class="w-5 h-5 text-coral-400"></i>
+                            </div>
+
+                            <!-- 4-Column Countdown Grid -->
+                            <div class="grid grid-cols-4 gap-2.5 text-center">
+                                <div class="p-3 rounded-2xl bg-ocean-900/90 border border-slate-800">
+                                    <span id="cd-days" class="font-mono font-extrabold text-2xl sm:text-3xl text-white block">05</span>
+                                    <span class="font-mono text-[10px] uppercase tracking-wider text-slate-400">Days</span>
+                                </div>
+                                <div class="p-3 rounded-2xl bg-ocean-900/90 border border-slate-800">
+                                    <span id="cd-hours" class="font-mono font-extrabold text-2xl sm:text-3xl text-biocyan-400 block">00</span>
+                                    <span class="font-mono text-[10px] uppercase tracking-wider text-slate-400">Hours</span>
+                                </div>
+                                <div class="p-3 rounded-2xl bg-ocean-900/90 border border-slate-800">
+                                    <span id="cd-mins" class="font-mono font-extrabold text-2xl sm:text-3xl text-amber-300 block">00</span>
+                                    <span class="font-mono text-[10px] uppercase tracking-wider text-slate-400">Mins</span>
+                                </div>
+                                <div class="p-3 rounded-2xl bg-ocean-900/90 border border-slate-800">
+                                    <span id="cd-secs" class="font-mono font-extrabold text-2xl sm:text-3xl text-coral-400 block">00</span>
+                                    <span class="font-mono text-[10px] uppercase tracking-wider text-slate-400">Secs</span>
+                                </div>
+                            </div>
+
+                            <!-- Progress Bar & Next Milestone -->
+                            <div class="space-y-1.5 pt-1">
+                                <div class="flex items-center justify-between text-[11px] font-mono">
+                                    <span id="expedition-pct-text" class="text-biocyan-400 font-bold">OPEN HORIZONS • NO TIME CONSTRAINTS</span>
+                                    <span class="text-slate-400">5 Countries • 14 Stops</span>
+                                </div>
+                                <div class="w-full h-2 bg-ocean-900 rounded-full overflow-hidden border border-slate-800">
+                                    <div id="expedition-progress-bar" class="h-full bg-gradient-to-r from-biocyan-500 via-sky-400 to-coral-500 transition-all duration-500" style="width: 100%;"></div>
+                                </div>
+                                <p id="current-phase-indicator" class="text-[11px] text-slate-300 pt-1">
+                                    Kickoff: 11/11 at 12:00 PM Noon in Bangkok — then flowing south to the islands at my own pace.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive 9-Stop Route Crest Bar (Matches Background Artwork) -->
+                <div class="mt-7 pt-6 border-t border-slate-800/80">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <span class="font-mono text-[11px] uppercase tracking-widest text-slate-400">
+                            🎨 Click any stop from the “Same Sky — Different Horizons” route artwork to zoom satellite map:
+                        </span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="focusStopOnMap(2)" class="px-3 py-1.5 rounded-xl bg-ocean-950/90 hover:bg-coral-500/20 border border-slate-800 hover:border-coral-400 text-xs font-bold text-slate-200 transition-all">🪂 Koh Tao, TH</button>
+                        <button onclick="focusStopOnMap(4)" class="px-3 py-1.5 rounded-xl bg-ocean-950/90 hover:bg-coral-500/20 border border-slate-800 hover:border-coral-400 text-xs font-bold text-slate-200 transition-all">🏞️ Khao Sok, TH</button>
+                        <button onclick="focusStopOnMap(10)" class="px-3 py-1.5 rounded-xl bg-ocean-950/90 hover:bg-biocyan-500/20 border border-slate-800 hover:border-biocyan-400 text-xs font-bold text-slate-200 transition-all">🏯 Ninh Binh, VN</button>
+                        <button onclick="focusStopOnMap(9)" class="px-3 py-1.5 rounded-xl bg-ocean-950/90 hover:bg-biocyan-500/20 border border-slate-800 hover:border-biocyan-400 text-xs font-bold text-slate-200 transition-all">🪁 Da Nang, VN</button>
+                        <button onclick="focusStopOnMap(11)" class="px-3 py-1.5 rounded-xl bg-ocean-950/90 hover:bg-purple-500/20 border border-slate-800 hover:border-purple-400 text-xs font-bold text-slate-200 transition-all">🛶 Palawan, PH</button>
+                        <button onclick="focusStopOnMap(12)" class="px-3 py-1.5 rounded-xl bg-ocean-950/90 hover:bg-purple-500/20 border border-slate-800 hover:border-purple-400 text-xs font-bold text-slate-200 transition-all">🏄 Siargao, PH</button>
+                        <button onclick="focusStopOnMap(13)" class="px-3 py-1.5 rounded-xl bg-ocean-950/90 hover:bg-rose-500/20 border border-slate-800 hover:border-rose-400 text-xs font-bold text-slate-200 transition-all">🛕 Bali, ID</button>
+                        <button onclick="focusStopOnMap(13)" class="px-3 py-1.5 rounded-xl bg-ocean-950/90 hover:bg-rose-500/20 border border-slate-800 hover:border-rose-400 text-xs font-bold text-slate-200 transition-all">🏍️ Lombok / Nusa, ID</button>
+                        <button onclick="focusStopOnMap(14)" class="px-3 py-1.5 rounded-xl bg-ocean-950/90 hover:bg-rose-500/20 border border-slate-800 hover:border-rose-400 text-xs font-bold text-slate-200 transition-all">🦎 Komodo, ID</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================================== -->
+        <!-- 2. INTERACTIVE 14-STOP HI-RES SATELLITE ROUTE MAP (#map-section)         -->
+        <!-- ======================================================================== -->
+        <section id="map-section" class="space-y-4">
+            <div class="glass-panel rounded-3xl p-5 sm:p-7 border border-slate-800/90 space-y-5">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div>
+                        <span class="font-mono text-xs uppercase tracking-widest text-biocyan-400 font-bold">INTERACTIVE SATELLITE TELEMETRY • 14 WAYPOINTS</span>
+                        <h2 class="font-display font-black text-2xl sm:text-3xl text-white mt-0.5">Southeast Asia Satellite Route Map</h2>
+                    </div>
+
+                    <!-- Map Layer Controls & API Key Button -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button id="layer-btn-googleHybrid" onclick="switchMapBaseLayer('googleHybrid')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-biocyan-500 text-ocean-950 transition-all">
+                            🛰️ Satellite Hybrid
+                        </button>
+                        <button id="layer-btn-esriSatellite" onclick="switchMapBaseLayer('esriSatellite')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-ocean-950 text-slate-300 border border-slate-800 hover:border-biocyan-500/40 transition-all">
+                            🌏 Esri World Imagery
+                        </button>
+                        <button id="layer-btn-topoTerrain" onclick="switchMapBaseLayer('topoTerrain')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-ocean-950 text-slate-300 border border-slate-800 hover:border-biocyan-500/40 transition-all">
+                            ⛰️ Topo / Karsts
+                        </button>
+                        <button id="layer-btn-darkTactical" onclick="switchMapBaseLayer('darkTactical')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-ocean-950 text-slate-300 border border-slate-800 hover:border-biocyan-500/40 transition-all">
+                            🌑 Dark Tactical
+                        </button>
+                        <button onclick="resetMapBounds()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-ocean-950 text-amber-300 border border-slate-800 hover:border-amber-400 transition-all">
+                            Full Loop View
+                        </button>
+                        <button onclick="openApiKeyModal()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-ocean-950 text-biocyan-300 border border-slate-800 hover:border-biocyan-400 inline-flex items-center space-x-1 transition-all">
+                            <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
+                            <span>API Key Settings</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Map + Waypoint Drawer Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                    <div class="lg:col-span-8 rounded-2xl overflow-hidden border border-slate-800 relative h-[430px] sm:h-[520px] bg-ocean-950">
+                        <div id="expedition-map" class="w-full h-full z-10"></div>
+                    </div>
+                    <div class="lg:col-span-4 flex flex-col h-[430px] sm:h-[520px] bg-ocean-950/85 rounded-2xl border border-slate-800 p-4">
+                        <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+                            <span class="font-mono text-xs font-bold uppercase tracking-wider text-white">Chronological Stops (1–14)</span>
+                            <span class="font-mono text-[11px] text-biocyan-400">Click to Fly</span>
+                        </div>
+                        <div id="map-waypoint-list" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================================== -->
+        <!-- 3. FILTERABLE 14-STOP MASTER ITINERARY (#itinerary)                      -->
+        <!-- ======================================================================== -->
+        <section id="itinerary" class="space-y-5">
+            <div class="glass-panel rounded-3xl p-6 sm:p-8 border border-slate-800/90 space-y-6">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div>
+                        <span class="font-mono text-xs uppercase tracking-widest text-biocyan-400 font-bold">PHASE-BY-PHASE ROUTE BREAKDOWN</span>
+                        <h2 class="font-display font-black text-2xl sm:text-3xl text-white mt-0.5">14-Stop Master Itinerary</h2>
+                    </div>
+
+                    <!-- Phase Filter Buttons -->
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <button onclick="setPhaseFilter('all')" id="phase-btn-all" class="phase-filter-btn px-3 py-1.5 rounded-xl text-xs font-extrabold bg-biocyan-500 text-ocean-950 transition-all">All Phases (14)</button>
+                        <button onclick="setPhaseFilter('Thailand')" id="phase-btn-Thailand" class="phase-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-ocean-950 text-slate-300 border border-slate-800">🇹🇭 Thailand (7)</button>
+                        <button onclick="setPhaseFilter('Cambodia')" id="phase-btn-Cambodia" class="phase-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-ocean-950 text-slate-300 border border-slate-800">🇰🇭 Cambodia (1)</button>
+                        <button onclick="setPhaseFilter('Vietnam')" id="phase-btn-Vietnam" class="phase-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-ocean-950 text-slate-300 border border-slate-800">🇻🇳 Vietnam (2)</button>
+                        <button onclick="setPhaseFilter('Philippines')" id="phase-btn-Philippines" class="phase-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-ocean-950 text-slate-300 border border-slate-800">🇵🇭 Philippines (2)</button>
+                        <button onclick="setPhaseFilter('Indonesia')" id="phase-btn-Indonesia" class="phase-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-ocean-950 text-slate-300 border border-slate-800">🇮🇩 Indonesia (2)</button>
+                    </div>
+                </div>
+
+                <!-- Activity Filter Pills -->
+                <div class="flex flex-wrap items-center gap-2 pt-1">
+                    <span class="font-mono text-[11px] uppercase tracking-wider text-slate-400 mr-1">Activity Focus:</span>
+                    <button onclick="setActivityFilter('all')" id="act-btn-all" class="act-filter-btn px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-white">All Activities</button>
+                    <button onclick="setActivityFilter('freedive')" id="act-btn-freedive" class="act-filter-btn px-3 py-1 rounded-lg text-xs font-semibold bg-ocean-950 text-slate-300 border border-slate-800">🤿 Freediving & Spearfishing</button>
+                    <button onclick="setActivityFilter('scuba')" id="act-btn-scuba" class="act-filter-btn px-3 py-1 rounded-lg text-xs font-semibold bg-ocean-950 text-slate-300 border border-slate-800">🦈 Scuba & Liveaboard</button>
+                    <button onclick="setActivityFilter('kite')" id="act-btn-kite" class="act-filter-btn px-3 py-1 rounded-lg text-xs font-semibold bg-ocean-950 text-slate-300 border border-slate-800">🪁 Kite & Surf</button>
+                    <button onclick="setActivityFilter('jungle')" id="act-btn-jungle" class="act-filter-btn px-3 py-1 rounded-lg text-xs font-semibold bg-ocean-950 text-slate-300 border border-slate-800">🏞️ Jungle & Karsts</button>
+                </div>
+
+                <!-- Cards Grid -->
+                <div id="itinerary-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+        </section>
+
+        <!-- ======================================================================== -->
+        <!-- 4. MASTER SCHEDULE & CONFIRMED LODGING TABLE (#schedule)                 -->
+        <!-- ======================================================================== -->
+        <section id="schedule" class="space-y-5">
+            <div class="glass-panel rounded-3xl p-6 sm:p-8 border border-slate-800/90 space-y-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <span class="font-mono text-xs uppercase tracking-widest text-biocyan-400 font-bold">STAYS, TRANSIT & ROUTE FLOW</span>
+                        <h2 class="font-display font-black text-2xl sm:text-3xl text-white mt-0.5">Route Stays & Basecamps</h2>
+                    </div>
+                    <div class="relative w-full sm:w-72">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                        <input id="schedule-search-input" type="text" oninput="renderScheduleTable()" placeholder="Search stop, basecamp, or country..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-ocean-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-biocyan-400">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-2xl border border-slate-800">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-ocean-950 text-slate-400 font-mono uppercase text-[11px] border-b border-slate-800">
+                                <th class="py-3.5 px-4">#</th>
+                                <th class="py-3.5 px-4">Destination</th>
+                                <th class="py-3.5 px-4">Pace / Horizon</th>
+                                <th class="py-3.5 px-4">Accommodation / Basecamp</th>
+                                <th class="py-3.5 px-4">Primary Focus</th>
+                                <th class="py-3.5 px-4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="schedule-table-body" class="divide-y divide-slate-800/70 bg-ocean-900/40"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================================== -->
+        <!-- 5. SOCIAL CHANNELS, MERCHANDISE & TRAIL SUPPORT HUB (#support)           -->
+        <!-- ======================================================================== -->
+        <section id="support" class="space-y-5">
+            <div class="glass-panel rounded-3xl p-6 sm:p-8 border border-slate-800/90">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Column 1: Social Media Channels -->
+                    <div class="p-5 rounded-2xl bg-ocean-950/85 border border-slate-800 flex flex-col justify-between space-y-4">
+                        <div class="space-y-2">
+                            <span class="font-mono text-[11px] uppercase tracking-widest text-biocyan-400 font-bold">CONNECT & FOLLOW ALONG</span>
+                            <h3 class="font-display font-extrabold text-xl text-white">Will's Social Channels</h3>
+                            <p class="text-xs text-slate-400 leading-relaxed">
+                                Watch freediving & liveaboard reels, drone coastal shots, and weekly backpacking updates across Southeast Asia.
+                            </p>
+                        </div>
+                        <div class="space-y-2">
+                            <a href="https://www.instagram.com/willracette/" target="_blank" rel="noopener noreferrer" class="w-full px-4 py-2.5 rounded-xl bg-ocean-900 hover:bg-pink-500/15 border border-slate-800 hover:border-pink-500/40 flex items-center justify-between text-xs font-bold text-pink-400 transition-all">
+                                <span class="flex items-center space-x-2"><i data-lucide="instagram" class="w-4 h-4"></i><span>Instagram (@willracette)</span></span>
+                                <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                            </a>
+                            <a href="https://www.youtube.com/@willracette4959" target="_blank" rel="noopener noreferrer" class="w-full px-4 py-2.5 rounded-xl bg-ocean-900 hover:bg-red-500/15 border border-slate-800 hover:border-red-500/40 flex items-center justify-between text-xs font-bold text-red-400 transition-all">
+                                <span class="flex items-center space-x-2"><i data-lucide="youtube" class="w-4 h-4"></i><span>YouTube (@willracette4959)</span></span>
+                                <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                            </a>
+                            <a href="https://www.facebook.com/will.racette.5/" target="_blank" rel="noopener noreferrer" class="w-full px-4 py-2.5 rounded-xl bg-ocean-900 hover:bg-blue-500/15 border border-slate-800 hover:border-blue-500/40 flex items-center justify-between text-xs font-bold text-blue-400 transition-all">
+                                <span class="flex items-center space-x-2"><i data-lucide="facebook" class="w-4 h-4"></i><span>Facebook (Will Racette)</span></span>
+                                <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: “Same Sky” Trail Merchandise -->
+                    <div class="p-5 rounded-2xl bg-ocean-950/85 border border-slate-800 flex flex-col justify-between space-y-4">
+                        <div class="space-y-2">
+                            <span class="font-mono text-[11px] uppercase tracking-widest text-biocyan-400 font-bold">LIMITED RUN APPAREL & POSTCARDS</span>
+                            <h3 class="font-display font-extrabold text-xl text-white">“Same Sky” Trail Merch</h3>
+                            <p class="text-xs text-slate-400 leading-relaxed">
+                                Featuring the vertical SE Asia route illustration on back-print tees, UPF 50+ dive rashguards, and handwritten postcards mailed from the trail.
+                            </p>
+                        </div>
+                        <div class="space-y-2">
+                            <button onclick="openMerchModal('Horizon Route Back-Print Tee')" class="w-full px-4 py-2.5 rounded-xl bg-ocean-900 hover:bg-biocyan-500/15 border border-slate-800 hover:border-biocyan-500/40 flex items-center justify-between text-xs font-bold text-slate-200 transition-all">
+                                <span>👕 “Same Sky” Route Back-Print Tee</span>
+                                <span class="font-mono text-biocyan-400">$32</span>
+                            </button>
+                            <button onclick="openMerchModal('UPF 50+ Freedive')" class="w-full px-4 py-2.5 rounded-xl bg-ocean-900 hover:bg-biocyan-500/15 border border-slate-800 hover:border-biocyan-500/40 flex items-center justify-between text-xs font-bold text-slate-200 transition-all">
+                                <span>🌊 UPF 50+ Freedive & Kite Rashguard</span>
+                                <span class="font-mono text-biocyan-400">$45</span>
+                            </button>
+                            <button onclick="openMerchModal()" class="w-full px-4 py-2.5 rounded-xl bg-biocyan-500 hover:bg-biocyan-400 text-ocean-950 font-extrabold text-xs flex items-center justify-center space-x-1.5 transition-all">
+                                <i data-lucide="shirt" class="w-4 h-4"></i>
+                                <span>Reserve Trail Merch</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Column 3: Fuel the Journey / Donate & Share -->
+                    <div class="p-5 rounded-2xl bg-ocean-950/85 border border-slate-800 flex flex-col justify-between space-y-4">
+                        <div class="space-y-2">
+                            <span class="font-mono text-[11px] uppercase tracking-widest text-amber-300 font-bold">TRAIL FUEL & COMMUNITY</span>
+                            <h3 class="font-display font-extrabold text-xl text-white">Fuel the Journey</h3>
+                            <p class="text-xs text-slate-400 leading-relaxed">
+                                Chip in for an Enriched Air Nitrox dive tank fill, an island ferry hop, or a post-dive Pad Thai & coconut along the route!
+                            </p>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="openDonateModal(5, 'Coconut & Pad Thai Recovery')" class="px-3 py-2 rounded-xl bg-ocean-900 hover:bg-amber-500/15 border border-slate-800 hover:border-amber-400 text-xs font-bold text-amber-300 transition-all">
+                                    🥥 $5 Pad Thai
+                                </button>
+                                <button onclick="openDonateModal(15, 'Enriched Air Nitrox Tank Fill')" class="px-3 py-2 rounded-xl bg-ocean-900 hover:bg-amber-500/15 border border-slate-800 hover:border-amber-400 text-xs font-bold text-amber-300 transition-all">
+                                    🫧 $15 Nitrox Fill
+                                </button>
+                            </div>
+                            <button onclick="openDonateModal()" class="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-coral-500 to-amber-500 hover:from-coral-400 hover:to-amber-400 text-ocean-950 font-extrabold text-xs flex items-center justify-center space-x-1.5 transition-all">
+                                <i data-lucide="heart-handshake" class="w-4 h-4"></i>
+                                <span>Donate / Fuel the Trip</span>
+                            </button>
+                            <button onclick="shareWebsite()" class="w-full px-4 py-2 rounded-xl bg-ocean-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-bold text-xs flex items-center justify-center space-x-1.5 transition-all">
+                                <i data-lucide="share-2" class="w-3.5 h-3.5 text-biocyan-400"></i>
+                                <span>Share Website Link</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================================================================== -->
+        <!-- 6. ACTUAL GOOGLE SHEETS GEAR & PACK LOADOUT (#gear)                      -->
+        <!-- ======================================================================== -->
+        <section id="gear" class="space-y-5">
+            <div class="glass-panel rounded-3xl p-6 sm:p-8 border border-slate-800/90 space-y-6">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div>
+                        <div class="inline-flex items-center space-x-2">
+                            <span class="font-mono text-xs uppercase tracking-widest text-biocyan-400 font-bold">SYNCED FROM GOOGLE SHEETS • TRAVEL GEAR FULL LIST</span>
+                            <span class="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 font-mono text-[11px] text-emerald-300 font-bold">$310 Pack & Org Total</span>
+                        </div>
+                        <h2 class="font-display font-black text-2xl sm:text-3xl text-white mt-1">Will's Actual Pack & Gear Loadout</h2>
+                        <p class="text-xs text-slate-400 mt-1">
+                            Featuring your exact Osprey Sojourn 46L & Daylite Sling 5L system, Bagsmart organizers, drybag, wallets, and flight/dive kit.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <a href="https://docs.google.com/spreadsheets/d/1qZthCsRHODv-BstkqBgFKxJQoF5pTRLaZSJ2u0GF8H8/edit?gid=0#gid=0" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/35 text-xs font-extrabold transition-all">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                            <span>Open Google Sheet</span>
+                            <i data-lucide="external-link" class="w-3 h-3"></i>
+                        </a>
+                        <span id="gear-progress-label" class="font-mono text-xs font-bold text-biocyan-400 px-2">15 / 15 (100%)</span>
+                        <button onclick="checkAllGear(true)" class="px-3 py-2 rounded-xl bg-ocean-950 hover:bg-slate-800 text-xs font-bold text-biocyan-400 border border-slate-800 transition-all">Check All</button>
+                        <button onclick="checkAllGear(false)" class="px-3 py-2 rounded-xl bg-ocean-950 hover:bg-slate-800 text-xs font-bold text-slate-400 border border-slate-800 transition-all">Reset</button>
+                    </div>
+                </div>
+
+                <!-- Category Filter Pills for Gear List -->
+                <div class="flex flex-wrap items-center gap-2 pt-1">
+                    <button id="gear-filter-all" onclick="setGearFilter('all')" class="gear-cat-btn px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-biocyan-500 text-ocean-950 transition-all">
+                        All Loadout Items (15)
+                    </button>
+                    <button id="gear-filter-sheet" onclick="setGearFilter('sheet')" class="gear-cat-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-ocean-950 text-slate-300 border border-slate-800 hover:border-biocyan-500/40 transition-all">
+                        📋 Google Sheet Core Pack & Org (10 • $310)
+                    </button>
+                    <button id="gear-filter-essentials" onclick="setGearFilter('essentials')" class="gear-cat-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-ocean-950 text-slate-300 border border-slate-800 hover:border-biocyan-500/40 transition-all">
+                        ✈️ Apparel, Flight & Dive Essentials (5)
+                    </button>
+                </div>
+
+                <div class="w-full h-2 bg-ocean-950 rounded-full overflow-hidden border border-slate-800">
+                    <div id="gear-progress-bar" class="h-full bg-gradient-to-r from-biocyan-500 to-emerald-400 transition-all duration-300" style="width: 100%;"></div>
+                </div>
+
+                <div id="gear-checklist-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ============================================================================ -->
+    <!-- FOOTER                                                                       -->
+    <!-- ============================================================================ -->
+    <footer class="relative z-10 border-t border-slate-800/80 glass-panel mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="text-center md:text-left">
+                <p class="font-display font-extrabold text-white text-base">WILL RACETTE • SOUTHEAST ASIA ADVENTURE</p>
+                <p class="text-xs text-slate-400 mt-1">“Same Sky — Different Horizons” • Thailand • Cambodia • Vietnam • Philippines • Indonesia</p>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-center gap-2.5">
+                <a href="https://www.facebook.com/will.racette.5/" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 rounded-xl bg-ocean-950 hover:bg-blue-500/15 border border-slate-800 text-xs font-bold text-blue-400 flex items-center space-x-1.5 transition-all">
+                    <i data-lucide="facebook" class="w-3.5 h-3.5"></i>
+                    <span>Facebook</span>
+                </a>
+                <a href="https://www.instagram.com/willracette/" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 rounded-xl bg-ocean-950 hover:bg-pink-500/15 border border-slate-800 text-xs font-bold text-pink-400 flex items-center space-x-1.5 transition-all">
+                    <i data-lucide="instagram" class="w-3.5 h-3.5"></i>
+                    <span>Instagram</span>
+                </a>
+                <a href="https://www.youtube.com/@willracette4959" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 rounded-xl bg-ocean-950 hover:bg-red-500/15 border border-slate-800 text-xs font-bold text-red-400 flex items-center space-x-1.5 transition-all">
+                    <i data-lucide="youtube" class="w-3.5 h-3.5"></i>
+                    <span>YouTube</span>
+                </a>
+                <button onclick="openMerchModal()" class="px-3.5 py-2 rounded-xl bg-ocean-950 hover:bg-slate-800 border border-slate-800 text-xs font-bold text-biocyan-400 flex items-center space-x-1.5 transition-all">
+                    <i data-lucide="shirt" class="w-3.5 h-3.5"></i>
+                    <span>Merch</span>
+                </button>
+                <button onclick="openDonateModal()" class="px-3.5 py-2 rounded-xl bg-ocean-950 hover:bg-slate-800 border border-slate-800 text-xs font-bold text-amber-300 flex items-center space-x-1.5 transition-all">
+                    <i data-lucide="heart-handshake" class="w-3.5 h-3.5"></i>
+                    <span>Donate</span>
+                </button>
+                <button onclick="shareWebsite()" class="px-3.5 py-2 rounded-xl bg-biocyan-500 hover:bg-biocyan-400 text-ocean-950 text-xs font-extrabold flex items-center space-x-1.5 transition-all">
+                    <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+                    <span>Share Site</span>
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ============================================================================ -->
+    <!-- MODAL 1: MERCHANDISE SHOWCASE & RESERVATION                                  -->
+    <!-- ============================================================================ -->
+    <div id="merch-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+        <div class="glass-panel rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-biocyan-500/40 shadow-2xl space-y-5 relative">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-10 h-10 rounded-2xl bg-biocyan-500/15 border border-biocyan-500/30 flex items-center justify-center text-biocyan-400">
+                        <i data-lucide="shirt" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-display font-black text-xl text-white">“Same Sky” Trail Merch</h3>
+                        <p class="text-xs text-slate-400">Reserve signature SE Asia route apparel & postcards</p>
+                    </div>
+                </div>
+                <button onclick="closeMerchModal()" class="p-2 rounded-xl bg-ocean-950 text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3">
+                <label class="block text-xs font-mono uppercase text-slate-300">Select Item</label>
+                <select id="merch-item-select" class="w-full px-4 py-3 rounded-2xl bg-ocean-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-biocyan-400">
+                    <option value="Horizon Route Back-Print Tee ($32)">👕 “Same Sky — Different Horizons” Route Tee ($32)</option>
+                    <option value="UPF 50+ Freedive & Kite Rashguard ($45)">🌊 UPF 50+ Freedive & Kite Rashguard ($45)</option>
+                    <option value="SE Asia Postcard + Vinyl Sticker Pack ($15)">📮 Handwritten SE Asia Postcard + Sticker Pack ($15)</option>
+                    <option value="Full Horizon Supporter Bundle ($75)">🎒 Full Supporter Bundle: Tee + Rashguard + Postcard ($75)</option>
+                </select>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-mono uppercase text-slate-300 mb-1">Size</label>
+                        <select id="merch-size-select" class="w-full px-3.5 py-2.5 rounded-xl bg-ocean-950 border border-slate-800 text-xs text-white">
+                            <option>Small</option>
+                            <option>Medium</option>
+                            <option selected>Large</option>
+                            <option>X-Large</option>
+                            <option>N/A (Stickers/Postcard)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono uppercase text-slate-300 mb-1">Your Name / Handle</label>
+                        <input id="merch-buyer-name" type="text" placeholder="@instagram or Name" class="w-full px-3.5 py-2.5 rounded-xl bg-ocean-950 border border-slate-800 text-xs text-white placeholder-slate-500">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-ocean-950/90 rounded-2xl p-4 border border-slate-800 text-xs text-slate-300 space-y-2">
+                <p class="font-semibold text-white">How Merch Reservations Work:</p>
+                <p>Click below to copy your order summary and message Will directly on <a href="https://www.instagram.com/willracette/" target="_blank" class="text-biocyan-400 underline font-bold">Instagram (@willracette)</a> or <a href="https://www.facebook.com/will.racette.5/" target="_blank" class="text-biocyan-400 underline font-bold">Facebook</a> to lock in your gear or postcard drop!</p>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-end gap-2.5 pt-2">
+                <button onclick="closeMerchModal()" class="px-4 py-2.5 rounded-xl bg-ocean-950 text-xs font-bold text-slate-400 hover:text-white">Close</button>
+                <button onclick="submitMerchReservation()" class="px-5 py-2.5 rounded-xl bg-biocyan-500 hover:bg-biocyan-400 text-ocean-950 text-xs font-extrabold flex items-center space-x-1.5 shadow-lg">
+                    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                    <span>Copy Reservation & Message Will</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================================ -->
+    <!-- MODAL 2: DONATE / FUEL THE JOURNEY                                           -->
+    <!-- ============================================================================ -->
+    <div id="donate-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+        <div class="glass-panel rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-amber-500/40 shadow-2xl space-y-5 relative">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-300">
+                        <i data-lucide="heart-handshake" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-display font-black text-xl text-white">Fuel the Journey</h3>
+                        <p class="text-xs text-slate-400">Support Will's open-ended SE Asia dive, flight & backpacking adventure</p>
+                    </div>
+                </div>
+                <button onclick="closeDonateModal()" class="p-2 rounded-xl bg-ocean-950 text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5 text-xs">
+                <button onclick="selectDonationTier(5, 'Coconut & Pad Thai Recovery')" class="p-3 rounded-2xl bg-ocean-950 border border-slate-800 hover:border-amber-400 text-left transition-all">
+                    <span class="font-mono font-black text-amber-300 text-base block">🥥 $5</span>
+                    <span class="text-slate-300 font-semibold">Pad Thai & Coconut</span>
+                </button>
+                <button onclick="selectDonationTier(15, 'Enriched Air Nitrox Tank Fill')" class="p-3 rounded-2xl bg-ocean-950 border border-slate-800 hover:border-amber-400 text-left transition-all">
+                    <span class="font-mono font-black text-amber-300 text-base block">🫧 $15</span>
+                    <span class="text-slate-300 font-semibold">Nitrox Dive Tank Fill</span>
+                </button>
+                <button onclick="selectDonationTier(30, 'Island Motorbike & Ferry Hop')" class="p-3 rounded-2xl bg-ocean-950 border border-slate-800 hover:border-amber-400 text-left transition-all">
+                    <span class="font-mono font-black text-amber-300 text-base block">🛵 $30</span>
+                    <span class="text-slate-300 font-semibold">Island Ferry & Scooter</span>
+                </button>
+                <button onclick="selectDonationTier(50, 'Freedive Line & Reef Fund')" class="p-3 rounded-2xl bg-ocean-950 border border-slate-800 hover:border-amber-400 text-left transition-all">
+                    <span class="font-mono font-black text-amber-300 text-base block">🦈 $50</span>
+                    <span class="text-slate-300 font-semibold">Freedive & Reef Fund</span>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-mono uppercase text-slate-300 mb-1">Contribution Amount ($)</label>
+                    <input id="donate-amount-input" type="number" value="15" min="1" class="w-full px-3.5 py-2.5 rounded-xl bg-ocean-950 border border-slate-800 text-sm font-mono font-bold text-amber-300">
+                </div>
+                <div>
+                    <label class="block text-xs font-mono uppercase text-slate-300 mb-1">Trail Note / Shoutout</label>
+                    <input id="donate-purpose-input" type="text" value="Enriched Air Nitrox Tank Fill" class="w-full px-3.5 py-2.5 rounded-xl bg-ocean-950 border border-slate-800 text-xs text-white">
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-end gap-2.5 pt-2">
+                <button onclick="closeDonateModal()" class="px-4 py-2.5 rounded-xl bg-ocean-950 text-xs font-bold text-slate-400 hover:text-white">Close</button>
+                <button onclick="confirmDonationPledge()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-coral-500 to-amber-500 hover:from-coral-400 hover:to-amber-400 text-ocean-950 text-xs font-extrabold flex items-center space-x-1.5 shadow-lg">
+                    <i data-lucide="Send" class="w-4 h-4"></i>
+                    <span>Send Trail Support Note</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================================ -->
+    <!-- MODAL 3: SATELLITE MAP API KEY SETTINGS                                      -->
+    <!-- ============================================================================ -->
+    <div id="api-key-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+        <div class="glass-panel rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-biocyan-500/40 shadow-2xl space-y-5">
+            <div class="flex items-center justify-between">
+                <h3 class="font-display font-black text-xl text-white">Satellite Map API Keys</h3>
+                <button onclick="closeApiKeyModal()" class="p-2 rounded-xl bg-ocean-950 text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+                Hi-Res Satellite Hybrid works automatically out-of-the-box. Optionally paste a Mapbox, MapTiler, or Google Maps key below to unlock custom commercial tile streams:
+            </p>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-mono uppercase text-slate-400 mb-1">Mapbox Access Token (pk.eyJ...)</label>
+                    <input id="input-mapbox-key" type="text" placeholder="pk.eyJ1Ijoi..." class="w-full px-3.5 py-2.5 rounded-xl bg-ocean-950 border border-slate-800 text-white font-mono">
+                </div>
+                <div>
+                    <label class="block font-mono uppercase text-slate-400 mb-1">MapTiler API Key</label>
+                    <input id="input-maptiler-key" type="text" placeholder="MapTiler key..." class="w-full px-3.5 py-2.5 rounded-xl bg-ocean-950 border border-slate-800 text-white font-mono">
+                </div>
+                <div>
+                    <label class="block font-mono uppercase text-slate-400 mb-1">Google Maps Tile Key (Optional)</label>
+                    <input id="input-google-key" type="text" placeholder="AIzaSy..." class="w-full px-3.5 py-2.5 rounded-xl bg-ocean-950 border border-slate-800 text-white font-mono">
+                </div>
+            </div>
+            <div class="flex items-center justify-between pt-2">
+                <button onclick="clearApiKeyConfig()" class="px-3.5 py-2 rounded-xl bg-ocean-950 text-xs font-bold text-rose-400 border border-rose-500/30">Reset Default</button>
+                <div class="flex space-x-2">
+                    <button onclick="closeApiKeyModal()" class="px-4 py-2 rounded-xl bg-ocean-950 text-xs font-bold text-slate-400">Cancel</button>
+                    <button onclick="saveApiKeyConfig()" class="px-5 py-2 rounded-xl bg-biocyan-500 text-ocean-950 text-xs font-extrabold">Save & Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================================ -->
+    <!-- TOAST NOTIFICATION BANNER                                                    -->
+    <!-- ============================================================================ -->
+    <div id="toast-notification" class="fixed bottom-5 right-5 z-50 glass-panel rounded-2xl p-4 border border-biocyan-500/50 shadow-2xl transform translate-y-24 opacity-0 transition-all duration-300 max-w-sm">
+        <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 rounded-xl bg-biocyan-500/20 flex items-center justify-center text-biocyan-400 shrink-0">
+                <i data-lucide="check" class="w-4 h-4"></i>
+            </div>
+            <div>
+                <h4 id="toast-title" class="text-xs font-extrabold text-white">Link Copied!</h4>
+                <p id="toast-message" class="text-[11px] text-slate-300 mt-0.5 break-all"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================================ -->
+    <!-- APPLICATION JAVASCRIPT                                                       -->
+    <!-- ============================================================================ -->
+    <script>
+        const MAP_API_STORAGE_KEY = "will_se_asia_map_api_keys_v1";
+        const MAP_API_CONFIG = {
+            defaultLayer: "googleHybrid",
+            mapboxApiKey: "",
+            maptilerApiKey: "",
+            googleMapsApiKey: ""
+        };
+
+        // ============================================================================
+        // 1. 14 CHRONOLOGICAL ROUTE STOPS (STARTS 11/11 @ NOON BKK, NO TIME CONSTRAINTS)
+        // ============================================================================
+        const EXPEDITION_STOPS = [
+            {
+                id: 1,
+                name: "Bangkok Arrival & Transit",
+                country: "Thailand",
+                phaseColor: "#fb923c",
+                dates: "Starts 11/11 @ 12:00 PM BKK",
+                lat: 13.7563,
+                lng: 100.5018,
+                accommodation: "Bangkok Transit Base + Overnight Sleeper Train South",
+                status: "Confirmed",
+                activities: ["jungle"],
+                highlights: "Touch down in Bangkok on 11/11 at 12:00 PM noon, shake off the jetlag with street food and temple walks, and board the southbound sleeper train + ferry toward the Gulf islands."
+            },
+            {
+                id: 2,
+                name: "Koh Tao",
+                country: "Thailand",
+                phaseColor: "#fb923c",
+                dates: "Open Horizon • Stop #2",
+                lat: 10.0956,
+                lng: 99.8384,
+                accommodation: "Koh Tao Heritage",
+                status: "Confirmed",
+                activities: ["freedive", "scuba"],
+                highlights: "Line freediving training, Gulf of Thailand coral reefs, coastal paragliding/viewpoint hikes, and island recovery."
+            },
+            {
+                id: 3,
+                name: "Koh Phangan",
+                country: "Thailand",
+                phaseColor: "#fb923c",
+                dates: "Open Horizon • Stop #3",
+                lat: 9.7319,
+                lng: 100.0136,
+                accommodation: "Morning Star Resort & Phangan Rainbow Bungalows",
+                status: "Confirmed",
+                activities: ["freedive", "jungle"],
+                highlights: "Island scooter exploration, quiet northern beaches, jungle waterfalls, and sunset coastal sessions."
+            },
+            {
+                id: 4,
+                name: "Khao Sok National Park",
+                country: "Thailand",
+                phaseColor: "#fb923c",
+                dates: "Open Horizon • Stop #4",
+                lat: 8.9167,
+                lng: 98.5303,
+                accommodation: "Khao Sok Palmview Resort",
+                status: "Confirmed",
+                activities: ["jungle"],
+                highlights: "Towering limestone karsts, ancient rainforest trekking, and emerald Cheow Lan Lake longtail boat excursions."
+            },
+            {
+                id: 5,
+                name: "Khao Lak & Similan Islands Liveaboard",
+                country: "Thailand",
+                phaseColor: "#fb923c",
+                dates: "Open Horizon • Stop #5",
+                lat: 8.6500,
+                lng: 97.6500,
+                accommodation: "Wandee Bed & Breakfast + Similan Liveaboard Vessel",
+                status: "Confirmed",
+                activities: ["scuba"],
+                highlights: "Offshore Andaman Sea scuba liveaboard diving Richelieu Rock, Koh Bon, and Koh Tachai for manta rays and whale sharks."
+            },
+            {
+                id: 6,
+                name: "Phuket Freediving & Spearfishing",
+                country: "Thailand",
+                phaseColor: "#fb923c",
+                dates: "Open Horizon • Stop #6",
+                lat: 7.8804,
+                lng: 98.3923,
+                accommodation: "Phuket Training Base",
+                status: "Confirmed",
+                activities: ["freedive"],
+                highlights: "Dedicated freediving depth progression and blue-water spearfishing in the Andaman Sea."
+            },
+            {
+                id: 7,
+                name: "Ko Lipe",
+                country: "Thailand",
+                phaseColor: "#fb923c",
+                dates: "Open Horizon • Stop #7",
+                lat: 6.4886,
+                lng: 99.3025,
+                accommodation: "The Chic Lipe",
+                status: "Confirmed",
+                activities: ["freedive", "scuba"],
+                highlights: "Tarutao National Marine Park soft coral walls, turquoise beaches, and unhurried island diving."
+            },
+            {
+                id: 8,
+                name: "Phnom Penh & Cambodia Trail",
+                country: "Cambodia",
+                phaseColor: "#10b981",
+                dates: "Open Horizon • Stop #8",
+                lat: 11.5564,
+                lng: 104.9282,
+                accommodation: "Phnom Penh & Siem Reap Route",
+                status: "Confirmed",
+                activities: ["jungle"],
+                highlights: "Soak in Cambodian history and culture, Mekong riverfront life, ancient temples, and overland travel toward Vietnam."
+            },
+            {
+                id: 9,
+                name: "Da Nang & Central Coast",
+                country: "Vietnam",
+                phaseColor: "#22d3ee",
+                dates: "Open Horizon • Stop #9",
+                lat: 16.0544,
+                lng: 108.2022,
+                accommodation: "Da Nang Coastal Base",
+                status: "Planned",
+                activities: ["kite", "jungle"],
+                highlights: "Coastal kiteboarding and flying sessions, Son Tra Peninsula motorbike loops, Hoi An lanterns, and My Khe Beach."
+            },
+            {
+                id: 10,
+                name: "Ninh Binh (Trang An & Tam Coc)",
+                country: "Vietnam",
+                phaseColor: "#22d3ee",
+                dates: "Open Horizon • Stop #10",
+                lat: 20.2506,
+                lng: 105.9745,
+                accommodation: "Tam Coc Karst Homestay",
+                status: "Planned",
+                activities: ["jungle"],
+                highlights: "Rowboat river caves winding beneath towering limestone karsts, Bich Dong Pagoda, and Hang Mua dragon peak viewpoints."
+            },
+            {
+                id: 11,
+                name: "Palawan (El Nido & Coron)",
+                country: "Philippines",
+                phaseColor: "#a855f7",
+                dates: "Open Horizon • Stop #11",
+                lat: 11.1956,
+                lng: 119.4180,
+                accommodation: "El Nido & Coron Island Base",
+                status: "Planned",
+                activities: ["freedive", "scuba"],
+                highlights: "WWII wreck penetrations in Coron, Barracuda Lake thermocline freediving, and Bacuit Archipelago banca expeditions."
+            },
+            {
+                id: 12,
+                name: "Siargao Island",
+                country: "Philippines",
+                phaseColor: "#a855f7",
+                dates: "Open Horizon • Stop #12",
+                lat: 9.8482,
+                lng: 126.0458,
+                accommodation: "General Luna Surf & Kite Base",
+                status: "Planned",
+                activities: ["kite", "freedive"],
+                highlights: "Cloud 9 reef breaks, palm-lined motorbike roads, Sugba Lagoon, and warm-water surf & kite sessions."
+            },
+            {
+                id: 13,
+                name: "Bali, Nusa Penida & Lombok",
+                country: "Indonesia",
+                phaseColor: "#f43f5e",
+                dates: "Open Horizon • Stop #13",
+                lat: -8.7278,
+                lng: 115.5444,
+                accommodation: "Amed Freedive Base, Nusa Penida & Kuta Lombok",
+                status: "Planned",
+                activities: ["freedive", "scuba", "kite"],
+                highlights: "USAT Liberty wreck freediving in Amed, Manta Point & Crystal Bay drifts in Nusa Penida, and southern Lombok coastal cliff roads."
+            },
+            {
+                id: 14,
+                name: "Komodo National Park",
+                country: "Indonesia",
+                phaseColor: "#f43f5e",
+                dates: "Open Horizon • Stop #14",
+                lat: -8.5500,
+                lng: 119.4833,
+                accommodation: "Labuan Bajo & Komodo Dive Boat",
+                status: "Planned",
+                activities: ["scuba", "freedive", "jungle"],
+                highlights: "High-current pinnacle scuba diving at Batu Bolong, Castle Rock & Manta Alley, Padar Island sunrise hike, and wild Komodo dragons."
+            }
+        ];
+
+        // ============================================================================
+        // 2. WILL'S ACTUAL GEAR LIST (FROM GOOGLE SHEET 1qZthCsRHODv-BstkqBgFKxJQoF5pTRLaZSJ2u0GF8H8)
+        // ============================================================================
+        const GEAR_ITEMS = [
+            {
+                id: "g1",
+                title: "Osprey Sojourn Porter Travel Pack 46L (Brindle Brown)",
+                category: "Main Pack",
+                group: "sheet",
+                price: "$130",
+                url: "https://www.osprey.com/sojourn-porter-46l-porter46f23-819?size=O%2FS&color=Brindle+Brown",
+                note: "Primary carry-on compliant 46L expedition pack with StraightJacket compression.",
+                checked: true
+            },
+            {
+                id: "g2",
+                title: "Osprey Daylite Sling Driftshade 5L (Truffle Brown)",
+                category: "Secondary (Personal)",
+                group: "sheet",
+                price: "$60",
+                url: "https://www.osprey.com/daylitetm-sling-bag-driftshade?size=O%2FS&color=Truffle+Brown",
+                note: "Personal item during travel; holds electronics and ideal for daytrips especially away from water.",
+                checked: true
+            },
+            {
+                id: "g3",
+                title: "Osprey Daylite Toiletry Kit (Torrent Blue / Barley Brown)",
+                category: "Toiletry Kit",
+                group: "sheet",
+                price: "$20",
+                url: "https://www.osprey.com/daylite-toiletry-kit-daytoilkits23-550?size=O%2FS&color=Torrent+Blue-Barley+Brown",
+                note: "Easy-clean zippered organizer for toiletries and reef/dive ear care.",
+                checked: true
+            },
+            {
+                id: "g4",
+                title: "Bagsmart 14pc Compression Packing Cubes",
+                category: "Compression Cubes",
+                group: "sheet",
+                price: "$30",
+                url: "https://www.amazon.com/dp/B0GQ6SJCNF?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1&psc=1",
+                note: "Modular compression organization inside the 46L Osprey Sojourn pack.",
+                checked: true
+            },
+            {
+                id: "g5",
+                title: "5L Waterproof Roll-Top Drybag",
+                category: "Drybag",
+                group: "sheet",
+                price: "$10",
+                url: "https://www.amazon.com/dp/B0GWD571LD?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1",
+                note: "Keeps electronics & wallet bone-dry on Thai longtail boats, ferries, and dive tenders.",
+                checked: true
+            },
+            {
+                id: "g6",
+                title: "Lanney RFID Money Belt / Waist Wallet",
+                category: "Waist Wallet",
+                group: "sheet",
+                price: "$10",
+                url: "https://www.amazon.com/dp/B07GKS7TRC?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1",
+                note: "Concealed waist security pouch for transit days, sleeper trains, and border crossings.",
+                checked: true
+            },
+            {
+                id: "g7",
+                title: "Chums Surfshort Fabric Wallet",
+                category: "Secondary Wallet (In)",
+                group: "sheet",
+                price: "$15",
+                url: "https://www.amazon.com/dp/B0F1Z7C14N?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1",
+                note: "Compact ripstop fabric wallet for daily island cash and cards.",
+                checked: true
+            },
+            {
+                id: "g8",
+                title: "Bagsmart Electronics & Cable Organizer",
+                category: "Cable / Elec Org",
+                group: "sheet",
+                price: "$15",
+                url: "https://www.amazon.com/dp/B0BWNF73FM?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1",
+                note: "Dedicated pouch for charging cables, adapters, SD cards, and dive camera batteries.",
+                checked: true
+            },
+            {
+                id: "g9",
+                title: "Travel Passport & Document Holder",
+                category: "Document Holder",
+                group: "sheet",
+                price: "$13",
+                url: "https://www.amazon.com/dp/B0C6TSCBDT?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1",
+                note: "Holds passport, e-Visa printout, dive certification cards, and boarding passes.",
+                checked: true
+            },
+            {
+                id: "g10",
+                title: "Waterproof Backpack Rain Cover",
+                category: "Rain Protection",
+                group: "sheet",
+                price: "$7",
+                url: "https://www.amazon.com/dp/B0DMF7T1R7?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1",
+                note: "Full rain & boat-spray shell sized for the Osprey 46L pack.",
+                checked: true
+            },
+            {
+                id: "g11",
+                title: "Merino.tech Men's Merino Wool T-Shirt + Socks (Bordo)",
+                category: "Apparel & Layering",
+                group: "essentials",
+                price: "Packed",
+                url: "",
+                note: "Odor-resistant, quick-dry merino wool base layer for long flights and jungle treks.",
+                checked: true
+            },
+            {
+                id: "g12",
+                title: "SARISUN Airplane Travel Pillow & Head Strap",
+                category: "Long-Haul Flight Kit",
+                group: "essentials",
+                price: "$21",
+                url: "",
+                note: "Neck & head support for transpacific flights and overnight sleeper trains.",
+                checked: true
+            },
+            {
+                id: "g13",
+                title: "Airalo Asia Unlimited Regional eSIM",
+                category: "Connectivity",
+                group: "essentials",
+                price: "$37",
+                url: "",
+                note: "Instant mobile data upon landing in Bangkok and across regional stops.",
+                checked: true
+            },
+            {
+                id: "g14",
+                title: "Freediving Low-Volume Mask, Snorkel & Dive Computer",
+                category: "Dive & Apnea Kit",
+                group: "essentials",
+                price: "Packed",
+                url: "",
+                note: "Ready for Koh Tao freediving, Similan Liveaboard diving, and Phuket spearfishing.",
+                checked: true
+            },
+            {
+                id: "g15",
+                title: "Thailand Tourist e-Visa & Master Gear/Route Sheet",
+                category: "Visas & Logistics",
+                group: "essentials",
+                price: "Locked",
+                url: "https://docs.google.com/spreadsheets/d/1qZthCsRHODv-BstkqBgFKxJQoF5pTRLaZSJ2u0GF8H8/edit?gid=0#gid=0",
+                note: "Approved e-Visa + regional flight confirmations and master packing spreadsheet.",
+                checked: true
+            }
+        ];
+
+        // ============================================================================
+        // 3. LIVE COUNTDOWN & TELEMETRY ENGINE (11/11 AT 12:00 PM NOON BANGKOK TIME)
+        // ============================================================================
+        const LAUNCH_DATE = new Date("2026-11-11T12:00:00+07:00").getTime();
+
+        function padZero(num) {
+            return String(Math.max(0, Math.floor(num))).padStart(2, "0");
+        }
+
+        function updateCountdown() {
+            const now = Date.now();
+            const daysEl = document.getElementById("cd-days");
+            const hoursEl = document.getElementById("cd-hours");
+            const minsEl = document.getElementById("cd-mins");
+            const secsEl = document.getElementById("cd-secs");
+            const badgeEl = document.getElementById("dynamic-trip-status-badge");
+            const headingEl = document.getElementById("countdown-heading");
+            const subtextEl = document.getElementById("countdown-subtext");
+            const phaseEl = document.getElementById("current-phase-indicator");
+            const pctTextEl = document.getElementById("expedition-pct-text");
+            const progressBarEl = document.getElementById("expedition-progress-bar");
+
+            if (!daysEl || !hoursEl || !minsEl || !secsEl) return;
+
+            if (now < LAUNCH_DATE) {
+                const diff = LAUNCH_DATE - now;
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+                daysEl.textContent = padZero(days);
+                hoursEl.textContent = padZero(hours);
+                minsEl.textContent = padZero(mins);
+                secsEl.textContent = padZero(secs);
+
+                if (badgeEl) badgeEl.textContent = `STARTS 11/11 @ 12:00 PM BKK • T-MINUS ${days}D ${hours}H`;
+                if (headingEl) headingEl.textContent = "BANGKOK KICKOFF COUNTDOWN";
+                if (subtextEl) subtextEl.textContent = "Starts 11/11 at 12:00 PM Noon Bangkok Time";
+                if (phaseEl) phaseEl.textContent = "Kickoff: 11/11 at 12:00 PM Noon in Bangkok — then flowing south to the islands at my own pace.";
+                if (pctTextEl) pctTextEl.textContent = "OPEN HORIZONS • NO TIME CONSTRAINTS";
+                if (progressBarEl) progressBarEl.style.width = "100%";
+            } else {
+                const elapsed = now - LAUNCH_DATE;
+                const dayOfTrip = Math.floor(elapsed / (1000 * 60 * 60 * 24)) + 1;
+                const hours = Math.floor((elapsed % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const mins = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+                const secs = Math.floor((elapsed % (1000 * 60)) / 1000);
+
+                daysEl.textContent = padZero(dayOfTrip);
+                hoursEl.textContent = padZero(hours);
+                minsEl.textContent = padZero(mins);
+                secsEl.textContent = padZero(secs);
+
+                if (badgeEl) badgeEl.textContent = `LIVE IN SOUTHEAST ASIA • DAY ${dayOfTrip} ON THE TRAIL`;
+                if (headingEl) headingEl.textContent = "TIME ON THE TRAIL (OPEN-ENDED)";
+                if (subtextEl) subtextEl.textContent = `Started 11/11 at Noon Bangkok Time • Day ${dayOfTrip} of Open Horizons`;
+                if (phaseEl) phaseEl.textContent = "Living on island time — diving, flying, and following the horizon with zero deadlines.";
+                if (pctTextEl) pctTextEl.textContent = "OPEN HORIZONS • NO TIME CONSTRAINTS";
+                if (progressBarEl) progressBarEl.style.width = "100%";
+            }
+        }
+
+        // ============================================================================
+        // 4. INTERACTIVE LEAFLET SATELLITE MAP ENGINE
+        // ============================================================================
+        let mapInstance = null;
+        let currentBaseLayerGroup = null;
+        let mapMarkersById = {};
+
+        function loadSavedMapApiKeys() {
+            try {
+                const raw = localStorage.getItem(MAP_API_STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed.mapboxApiKey) MAP_API_CONFIG.mapboxApiKey = parsed.mapboxApiKey;
+                    if (parsed.maptilerApiKey) MAP_API_CONFIG.maptilerApiKey = parsed.maptilerApiKey;
+                    if (parsed.googleMapsApiKey) MAP_API_CONFIG.googleMapsApiKey = parsed.googleMapsApiKey;
+                }
+            } catch (e) {}
+        }
+
+        function createBaseLayerGroup(layerKey) {
+            if (layerKey === "googleHybrid") {
+                const googleKeyParam = MAP_API_CONFIG.googleMapsApiKey ? `&key=${encodeURIComponent(MAP_API_CONFIG.googleMapsApiKey)}` : "";
+                const googleHybrid = L.tileLayer(`https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}${googleKeyParam}`, {
+                    maxZoom: 20,
+                    attribution: "Satellite Hybrid"
+                });
+                return L.layerGroup([googleHybrid]);
+            }
+            if (layerKey === "esriSatellite") {
+                const esriSat = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+                    maxZoom: 19,
+                    attribution: "Esri World Imagery"
+                });
+                const esriLabels = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {
+                    maxZoom: 19
+                });
+                return L.layerGroup([esriSat, esriLabels]);
+            }
+            if (layerKey === "topoTerrain") {
+                const topo = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+                    maxZoom: 17,
+                    attribution: "OpenTopoMap"
+                });
+                return L.layerGroup([topo]);
+            }
+            const dark = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+                maxZoom: 19,
+                attribution: "CARTO Dark"
+            });
+            return L.layerGroup([dark]);
+        }
+
+        function switchMapBaseLayer(layerKey) {
+            if (!mapInstance) return;
+            if (currentBaseLayerGroup) {
+                mapInstance.removeLayer(currentBaseLayerGroup);
+            }
+            currentBaseLayerGroup = createBaseLayerGroup(layerKey);
+            currentBaseLayerGroup.addTo(mapInstance);
+
+            ["googleHybrid", "esriSatellite", "topoTerrain", "darkTactical"].forEach(k => {
+                const btn = document.getElementById(`layer-btn-${k}`);
+                if (!btn) return;
+                btn.className = (k === layerKey)
+                    ? "px-3 py-1.5 rounded-xl text-xs font-extrabold bg-biocyan-500 text-ocean-950 transition-all"
+                    : "px-3 py-1.5 rounded-xl text-xs font-bold bg-ocean-950 text-slate-300 border border-slate-800 hover:border-biocyan-500/40 transition-all";
+            });
+        }
+
+        function initExpeditionMap() {
+            const container = document.getElementById("expedition-map");
+            if (!container || typeof L === "undefined") return;
+
+            loadSavedMapApiKeys();
+
+            mapInstance = L.map("expedition-map", {
+                center: [8.5, 108.5],
+                zoom: 5,
+                zoomControl: true,
+                scrollWheelZoom: false
+            });
+
+            switchMapBaseLayer(MAP_API_CONFIG.defaultLayer || "googleHybrid");
+
+            const latLngs = EXPEDITION_STOPS.map(s => [s.lat, s.lng]);
+
+            // Outer dark halo polyline + inner cyan route line for high satellite visibility
+            L.polyline(latLngs, {
+                color: "#040812",
+                weight: 6,
+                opacity: 0.75
+            }).addTo(mapInstance);
+
+            L.polyline(latLngs, {
+                color: "#22d3ee",
+                weight: 3,
+                dashArray: "8, 8",
+                opacity: 0.95
+            }).addTo(mapInstance);
+
+            EXPEDITION_STOPS.forEach(stop => {
+                const icon = L.divIcon({
+                    className: "",
+                    html: `<div class="custom-marker-pin" style="background:${stop.phaseColor};">${stop.id}</div>`,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
+
+                const marker = L.marker([stop.lat, stop.lng], { icon }).addTo(mapInstance);
+                marker.bindPopup(`
+                    <div class="p-1 space-y-1.5 max-w-xs">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="font-mono text-[10px] uppercase px-2 py-0.5 rounded bg-biocyan-500/20 text-biocyan-300 font-bold">#${stop.id} • ${stop.country}</span>
+                            <span class="font-mono text-[10px] text-amber-300">${stop.dates}</span>
+                        </div>
+                        <h4 class="font-display font-extrabold text-sm text-white">${stop.name}</h4>
+                        <p class="text-[11px] text-slate-300">${stop.highlights}</p>
+                        <p class="text-[10px] font-mono text-biocyan-400">Stay: ${stop.accommodation}</p>
+                    </div>
+                `);
+                mapMarkersById[stop.id] = marker;
+            });
+
+            renderMapWaypointDrawer();
+
+            setTimeout(() => {
+                if (mapInstance && container.offsetWidth > 0 && container.offsetHeight > 0) {
+                    mapInstance.invalidateSize();
+                    mapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [28, 28] });
+                }
+            }, 150);
+        }
+
+        function renderMapWaypointDrawer() {
+            const listEl = document.getElementById("map-waypoint-list");
+            if (!listEl) return;
+            listEl.innerHTML = EXPEDITION_STOPS.map(stop => `
+                <button onclick="focusStopOnMap(${stop.id})" class="w-full text-left p-2.5 rounded-xl bg-ocean-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-biocyan-500/40 transition-all flex items-start space-x-3">
+                    <span class="w-6 h-6 rounded-full flex items-center justify-center font-mono text-[11px] font-extrabold text-ocean-950 shrink-0 mt-0.5" style="background:${stop.phaseColor};">${stop.id}</span>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center justify-between gap-1">
+                            <span class="text-xs font-extrabold text-white truncate">${stop.name}</span>
+                            <span class="font-mono text-[10px] text-slate-400 shrink-0">${stop.country}</span>
+                        </div>
+                        <span class="block font-mono text-[10px] text-biocyan-400 mt-0.5">${stop.dates}</span>
+                        <span class="block text-[11px] text-slate-400 truncate mt-0.5">${stop.accommodation}</span>
+                    </div>
+                </button>
+            `).join("");
+        }
+
+        function focusStopOnMap(stopId) {
+            const stop = EXPEDITION_STOPS.find(s => s.id === stopId);
+            if (!stop || !mapInstance) return;
+            const mapSection = document.getElementById("map-section");
+            if (mapSection) {
+                mapSection.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+            setTimeout(() => {
+                mapInstance.invalidateSize();
+                mapInstance.setView([stop.lat, stop.lng], 10, { animate: true });
+                if (mapMarkersById[stop.id]) {
+                    mapMarkersById[stop.id].openPopup();
+                }
+            }, 250);
+        }
+
+        function resetMapBounds() {
+            if (!mapInstance) return;
+            const latLngs = EXPEDITION_STOPS.map(s => [s.lat, s.lng]);
+            mapInstance.invalidateSize();
+            mapInstance.fitBounds(L.latLngBounds(latLngs), { padding: [28, 28] });
+        }
+
+        function openApiKeyModal() {
+            const modal = document.getElementById("api-key-modal");
+            if (!modal) return;
+            document.getElementById("input-mapbox-key").value = MAP_API_CONFIG.mapboxApiKey || "";
+            document.getElementById("input-maptiler-key").value = MAP_API_CONFIG.maptilerApiKey || "";
+            document.getElementById("input-google-key").value = MAP_API_CONFIG.googleMapsApiKey || "";
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+
+        function closeApiKeyModal() {
+            const modal = document.getElementById("api-key-modal");
+            if (!modal) return;
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+
+        function saveApiKeyConfig() {
+            MAP_API_CONFIG.mapboxApiKey = document.getElementById("input-mapbox-key").value.trim();
+            MAP_API_CONFIG.maptilerApiKey = document.getElementById("input-maptiler-key").value.trim();
+            MAP_API_CONFIG.googleMapsApiKey = document.getElementById("input-google-key").value.trim();
+            try {
+                localStorage.setItem(MAP_API_STORAGE_KEY, JSON.stringify(MAP_API_CONFIG));
+            } catch (e) {}
+            switchMapBaseLayer("googleHybrid");
+            closeApiKeyModal();
+            showToast("Satellite Keys Saved", "Updated satellite map configuration.");
+        }
+
+        function clearApiKeyConfig() {
+            MAP_API_CONFIG.mapboxApiKey = "";
+            MAP_API_CONFIG.maptilerApiKey = "";
+            MAP_API_CONFIG.googleMapsApiKey = "";
+            try {
+                localStorage.removeItem(MAP_API_STORAGE_KEY);
+            } catch (e) {}
+            switchMapBaseLayer("googleHybrid");
+            closeApiKeyModal();
+            showToast("Default Satellite Restored", "Using built-in Satellite Hybrid tiles.");
+        }
+
+        // ============================================================================
+        // 5. FILTERABLE 14-STOP MASTER ITINERARY CARDS & SCHEDULE TABLE
+        // ============================================================================
+        let activePhaseFilter = "all";
+        let activeActivityFilter = "all";
+
+        function setPhaseFilter(phase) {
+            activePhaseFilter = phase;
+            document.querySelectorAll(".phase-filter-btn").forEach(btn => {
+                const isSelected = btn.id === `phase-btn-${phase}`;
+                btn.className = isSelected
+                    ? "phase-filter-btn px-3 py-1.5 rounded-xl text-xs font-extrabold bg-biocyan-500 text-ocean-950 transition-all"
+                    : "phase-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-ocean-950 text-slate-300 border border-slate-800";
+            });
+            renderItineraryCards();
+        }
+
+        function setActivityFilter(act) {
+            activeActivityFilter = act;
+            document.querySelectorAll(".act-filter-btn").forEach(btn => {
+                const isSelected = btn.id === `act-btn-${act}`;
+                btn.className = isSelected
+                    ? "act-filter-btn px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-white"
+                    : "act-filter-btn px-3 py-1 rounded-lg text-xs font-semibold bg-ocean-950 text-slate-300 border border-slate-800";
+            });
+            renderItineraryCards();
+        }
+
+        function renderItineraryCards() {
+            const grid = document.getElementById("itinerary-cards-grid");
+            if (!grid) return;
+
+            const filtered = EXPEDITION_STOPS.filter(stop => {
+                const matchPhase = activePhaseFilter === "all" || stop.country === activePhaseFilter;
+                const matchAct = activeActivityFilter === "all" || stop.activities.includes(activeActivityFilter);
+                return matchPhase && matchAct;
+            });
+
+            grid.innerHTML = filtered.map(stop => `
+                <div class="p-5 rounded-2xl bg-ocean-950/85 border border-slate-800 hover:border-biocyan-500/40 transition-all flex flex-col justify-between gap-4">
+                    <div class="space-y-2.5">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="inline-flex items-center space-x-1.5 font-mono text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-ocean-900 border border-slate-800 text-white">
+                                <span class="w-2 h-2 rounded-full" style="background:${stop.phaseColor};"></span>
+                                <span>#${stop.id} • ${stop.country}</span>
+                            </span>
+                            <span class="font-mono text-[11px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold">${stop.status}</span>
+                        </div>
+                        <h3 class="font-display font-extrabold text-lg text-white">${stop.name}</h3>
+                        <p class="font-mono text-xs text-biocyan-400">${stop.dates}</p>
+                        <p class="text-xs text-slate-300 leading-relaxed">${stop.highlights}</p>
+                    </div>
+                    <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                        <span class="text-[11px] text-slate-400 truncate" title="${stop.accommodation}">🏨 ${stop.accommodation}</span>
+                        <button onclick="focusStopOnMap(${stop.id})" class="shrink-0 px-2.5 py-1 rounded-lg bg-biocyan-500/15 hover:bg-biocyan-500/25 text-biocyan-300 font-mono text-[11px] font-bold transition-all">
+                            Pin on Map
+                        </button>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function renderScheduleTable() {
+            const tbody = document.getElementById("schedule-table-body");
+            if (!tbody) return;
+            const query = (document.getElementById("schedule-search-input")?.value || "").toLowerCase();
+
+            const rows = EXPEDITION_STOPS.filter(s => {
+                return (
+                    s.name.toLowerCase().includes(query) ||
+                    s.country.toLowerCase().includes(query) ||
+                    s.accommodation.toLowerCase().includes(query) ||
+                    s.dates.toLowerCase().includes(query)
+                );
+            });
+
+            tbody.innerHTML = rows.map(stop => `
+                <tr class="hover:bg-ocean-950/70 transition-colors">
+                    <td class="py-3 px-4 font-mono font-bold text-biocyan-400">#${stop.id}</td>
+                    <td class="py-3 px-4 font-bold text-white">${stop.name} <span class="text-slate-400 font-normal">(${stop.country})</span></td>
+                    <td class="py-3 px-4 font-mono text-slate-300">${stop.dates}</td>
+                    <td class="py-3 px-4 text-slate-200">${stop.accommodation}</td>
+                    <td class="py-3 px-4 text-slate-400">${stop.highlights}</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold ${
+                            stop.status === 'Confirmed'
+                                ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                                : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                        }">${stop.status}</span>
+                    </td>
+                </tr>
+            `).join("");
+        }
+
+        // ============================================================================
+        // 7. INTERACTIVE GEAR CHECKLIST (SYNCED WITH ACTUAL GOOGLE SHEET)
+        // ============================================================================
+        const STORAGE_KEY = "will_se_asia_gear_v3";
+        let activeGearFilter = "all";
+
+        function setGearFilter(filter) {
+            activeGearFilter = filter;
+            document.querySelectorAll(".gear-cat-btn").forEach(btn => {
+                const isActive = btn.id === `gear-filter-${filter}`;
+                btn.className = isActive
+                    ? "gear-cat-btn px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-biocyan-500 text-ocean-950 transition-all shadow"
+                    : "gear-cat-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-ocean-950 text-slate-300 border border-slate-800 hover:border-biocyan-500/40 transition-all";
+            });
+            renderGearChecklist();
+        }
+
+        function loadGearState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    GEAR_ITEMS.forEach(item => {
+                        if (typeof parsed[item.id] === "boolean") {
+                            item.checked = parsed[item.id];
+                        }
+                    });
+                }
+            } catch (e) {}
+        }
+
+        function saveGearState() {
+            try {
+                const map = {};
+                GEAR_ITEMS.forEach(item => {
+                    map[item.id] = item.checked;
+                });
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
+            } catch (e) {}
+        }
+
+        function toggleGearItem(id) {
+            const item = GEAR_ITEMS.find(g => g.id === id);
+            if (item) {
+                item.checked = !item.checked;
+                saveGearState();
+                renderGearChecklist();
+            }
+        }
+
+        function checkAllGear(state) {
+            GEAR_ITEMS.forEach(g => g.checked = state);
+            saveGearState();
+            renderGearChecklist();
+        }
+
+        function renderGearChecklist() {
+            const grid = document.getElementById("gear-checklist-grid");
+            const checkedCount = GEAR_ITEMS.filter(g => g.checked).length;
+            const total = GEAR_ITEMS.length;
+            const pct = Math.round((checkedCount / total) * 100);
+
+            document.getElementById("gear-progress-label").textContent = `${checkedCount} / ${total} (${pct}%)`;
+            document.getElementById("gear-progress-bar").style.width = `${pct}%`;
+
+            const visibleItems = GEAR_ITEMS.filter(item => {
+                if (activeGearFilter === "all") return true;
+                return item.group === activeGearFilter;
+            });
+
+            grid.innerHTML = visibleItems.map(item => `
+                <div class="p-4 rounded-2xl border transition-all flex flex-col justify-between gap-3 ${
+                    item.checked 
+                        ? 'bg-biocyan-500/10 border-biocyan-500/40 text-white' 
+                        : 'bg-ocean-950/85 border-slate-800 text-slate-300 hover:border-slate-700'
+                }">
+                    <div class="flex items-start space-x-3 cursor-pointer" onclick="toggleGearItem('${item.id}')">
+                        <div class="w-5 h-5 rounded-md mt-0.5 flex items-center justify-center shrink-0 border ${
+                            item.checked ? 'bg-biocyan-500 border-biocyan-400 text-ocean-950' : 'border-slate-600 bg-ocean-900'
+                        }">
+                            ${item.checked ? '<i data-lucide="check" class="w-3.5 h-3.5 stroke-[3]"></i>' : ''}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-[10px] font-mono uppercase tracking-wider text-biocyan-400 font-bold">${item.category}</span>
+                                ${item.price ? `<span class="text-[10px] font-mono font-extrabold px-2 py-0.5 rounded bg-ocean-950 text-amber-300 border border-amber-500/30">${item.price}</span>` : ''}
+                            </div>
+                            <span class="block text-xs sm:text-sm font-extrabold mt-0.5 ${item.checked ? 'text-white' : 'text-slate-200'}">${item.title}</span>
+                            ${item.note ? `<p class="text-[11px] text-slate-400 mt-1 leading-relaxed">${item.note}</p>` : ''}
+                        </div>
+                    </div>
+                    ${item.url ? `
+                        <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
+                            <span class="font-mono text-slate-400">From Google Sheet</span>
+                            <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1 font-bold text-biocyan-400 hover:text-biocyan-300 transition-colors">
+                                <span>View Product Spec</span>
+                                <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+                            </a>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join("");
+
+            lucide.createIcons();
+        }
+
+        function toggleMobileMenu() {
+            const drawer = document.getElementById("mobile-nav-drawer");
+            if (drawer) {
+                drawer.classList.toggle("hidden");
+            }
+        }
+
+        // ============================================================================
+        // 8. SHARE WEBSITE, MERCHANDISE & DONATION HANDLERS
+        // ============================================================================
+        function shareWebsite() {
+            const shareUrl = window.location.href;
+            const shareTitle = "Will Racette | Southeast Asia Adventure";
+            const shareText = "Follow Will Racette's open-ended Southeast Asia Adventure (Same Sky — Different Horizons):";
+
+            if (navigator.share) {
+                navigator.share({
+                    title: shareTitle,
+                    text: shareText,
+                    url: shareUrl
+                }).catch(() => {
+                    copyLinkToClipboard(shareUrl, "Website Link Copied to Clipboard!");
+                });
+            } else {
+                copyLinkToClipboard(shareUrl, "Website Link Copied to Clipboard!");
+            }
+        }
+
+        function openMerchModal(defaultItem) {
+            const modal = document.getElementById("merch-modal");
+            if (!modal) return;
+            if (defaultItem) {
+                const select = document.getElementById("merch-item-select");
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].value.includes(defaultItem)) {
+                        select.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            lucide.createIcons();
+        }
+
+        function closeMerchModal() {
+            const modal = document.getElementById("merch-modal");
+            if (!modal) return;
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+
+        function submitMerchReservation() {
+            const item = document.getElementById("merch-item-select").value;
+            const size = document.getElementById("merch-size-select").value;
+            const buyer = document.getElementById("merch-buyer-name").value.trim() || "Supporter";
+            const summary = `Hey Will! I'd love to reserve "${item}" (Size: ${size}) from your Same Sky — Different Horizons SE Asia site! — ${buyer}`;
+
+            copyLinkToClipboard(summary, "Merch Reservation Copied! Send it to Will on IG/FB.");
+            closeMerchModal();
+        }
+
+        function openDonateModal(amount, purpose) {
+            const modal = document.getElementById("donate-modal");
+            if (!modal) return;
+            if (amount) document.getElementById("donate-amount-input").value = amount;
+            if (purpose) document.getElementById("donate-purpose-input").value = purpose;
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            lucide.createIcons();
+        }
+
+        function closeDonateModal() {
+            const modal = document.getElementById("donate-modal");
+            if (!modal) return;
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+
+        function selectDonationTier(amount, purpose) {
+            document.getElementById("donate-amount-input").value = amount;
+            document.getElementById("donate-purpose-input").value = purpose;
+        }
+
+        function confirmDonationPledge() {
+            const amount = document.getElementById("donate-amount-input").value || "15";
+            const purpose = document.getElementById("donate-purpose-input").value || "Trail Support";
+            const note = `Hey Will! Chipping in $${amount} for "${purpose}" on your SE Asia adventure! Safe dives!`;
+            copyLinkToClipboard(note, `Trail Support Note ($${amount}) Copied!`);
+            closeDonateModal();
+        }
+
+        function copyLinkToClipboard(text, titleMessage) {
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            textarea.style.position = "fixed";
+            textarea.style.opacity = "0";
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand("copy");
+                showToast(titleMessage, text);
+            } catch (err) {
+                showToast("Copy Link", text);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        function showToast(title, msg) {
+            const toast = document.getElementById("toast-notification");
+            document.getElementById("toast-title").textContent = title;
+            document.getElementById("toast-message").textContent = msg;
+            toast.classList.remove("translate-y-24", "opacity-0");
+            setTimeout(() => {
+                toast.classList.add("translate-y-24", "opacity-0");
+            }, 3500);
+        }
+
+        // ============================================================================
+        // 9. BACKGROUND ARTWORK ("SAME SKY - DIFFERENT HORIZONS") CONTROLS
+        // ============================================================================
+        let currentBgMode = "balanced";
+
+        function setBackgroundArtIntensity(mode) {
+            const svgWrapper = document.getElementById("svg-mural-wrapper");
+            const userImg = document.getElementById("user-tattoo-bg-img");
+            const btnSubtle = document.getElementById("bg-btn-subtle");
+            const btnBalanced = document.getElementById("bg-btn-balanced");
+            const btnSpotlight = document.getElementById("bg-btn-spotlight");
+
+            if (mode === "spotlight" && currentBgMode === "spotlight") {
+                mode = "balanced";
+            }
+            currentBgMode = mode;
+
+            [btnSubtle, btnBalanced, btnSpotlight].forEach(b => {
+                if (b) b.className = "px-2.5 py-1 rounded-lg bg-ocean-950/90 text-slate-300 hover:text-white font-semibold transition-all";
+            });
+
+            if (mode === "subtle") {
+                if (svgWrapper) svgWrapper.style.opacity = "0.18";
+                if (userImg) userImg.style.opacity = "0.18";
+                document.body.classList.remove("art-spotlight-mode");
+                if (btnSubtle) btnSubtle.className = "px-2.5 py-1 rounded-lg bg-biocyan-500 text-ocean-950 font-extrabold transition-all";
+            } else if (mode === "spotlight") {
+                if (svgWrapper) svgWrapper.style.opacity = "0.88";
+                if (userImg) userImg.style.opacity = "0.78";
+                document.body.classList.add("art-spotlight-mode");
+                if (btnSpotlight) btnSpotlight.className = "px-2.5 py-1 rounded-lg bg-coral-500 text-ocean-950 font-extrabold transition-all";
+                showToast("Art Spotlight Active", "Background mural boosted — click again to restore glass opacity.");
+            } else {
+                if (svgWrapper) svgWrapper.style.opacity = "0.42";
+                if (userImg) userImg.style.opacity = "0.38";
+                document.body.classList.remove("art-spotlight-mode");
+                if (btnBalanced) btnBalanced.className = "px-2.5 py-1 rounded-lg bg-biocyan-500 text-ocean-950 font-extrabold transition-all";
+            }
+        }
+
+        function handleCustomTattooImageUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const objectUrl = URL.createObjectURL(file);
+            const userImg = document.getElementById("user-tattoo-bg-img");
+            if (userImg) {
+                userImg.src = objectUrl;
+                userImg.style.display = "block";
+                userImg.classList.remove("hidden");
+                setBackgroundArtIntensity("spotlight");
+                showToast("Custom Route Art Applied!", "Your illustration is now blended into the full-screen background.");
+            }
+        }
+
+        // ============================================================================
+        // INITIALIZE ON WINDOW LOAD
+        // ============================================================================
+        window.onload = function () {
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+            initExpeditionMap();
+            renderItineraryCards();
+            renderScheduleTable();
+            loadGearState();
+            renderGearChecklist();
+            lucide.createIcons();
+        };
+    </script>
+</body>
+</html>
